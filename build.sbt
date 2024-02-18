@@ -7,6 +7,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "cinema-booking-scala"
   )
-
+// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.14.0"
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.16"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.16" % "test"
