@@ -49,6 +49,21 @@ class SeatingMapTest extends UnitSpec {
       }
     }
 
+    "not have overlapping ranges" in {
+      val testData = Table(
+        "Ranges",
+        Seq(Range.of(1, 6), Range.of(6, 15)),
+        Seq(Range.of(1, 16), Range.of(15, 16)),
+        Seq(Range.of(2, 5), Range.of(6, 8), Range.of(7, 10)),
+        Seq(Range.of(55, 100), Range.of(57, 58)),
+        Seq(Range.of(42, 42), Range.of(42, 42)),
+        Seq(Range.of(42, 48), Range.of(42, 48))
+      )
+      forAll(testData) { (ranges: Seq[Range[Integer]]) =>
+        an [IllegalArgumentException] should be thrownBy SeatBlocks(ranges)
+      }
+    }
+
   }
 
   "A Row" when {

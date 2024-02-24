@@ -14,9 +14,21 @@ object Row:
     opaque type SeatBlocks = Seq[Range[Integer]]
 
     def apply(ranges: Seq[Range[Integer]]): SeatBlocks = {
-      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0))
+      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0)
+        && !isOverlapping(ranges)
+      )
       ranges
     }
+
+    private def isOverlapping(ranges: Seq[Range[Integer]]) =
+      if (ranges.length <= 1) false
+      else {
+        val sorted = ranges.sortWith(_.getMinimum <= _.getMinimum)
+
+        sorted
+          .zip(sorted.tail)
+          .exists(pairOfRanges => pairOfRanges._1.getMaximum >= pairOfRanges._2.getMinimum)
+      }
 
     extension (seatBlock: SeatBlocks)
       def seatCount: Int = seatBlock.map(range => range.getMaximum - range.getMinimum + 1).sum
