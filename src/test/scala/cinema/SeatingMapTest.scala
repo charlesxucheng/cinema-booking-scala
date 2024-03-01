@@ -26,41 +26,41 @@ class SeatingMapTest extends UnitSpec {
     "have size that is equal to the sum of the number of elements its Ranges have" in {
       val testData = Table(
         ("Ranges", "Size"),
-        (Seq(Range.of(1, 1)), 1),
-        (Seq(Range.of(2, 6)), 5),
-        (Seq(Range.of(10, 20), Range.of(1, 5)), 16),
-        (Seq(Range.of(4, 7), Range.of(10, 13), Range.of(21, 40)), 28)
+        (Seq((1, 1)), 1),
+        (Seq((2, 6)), 5),
+        (Seq((10, 20), (1, 5)), 16),
+        (Seq((4, 7), (10, 13), (21, 40)), 28)
       )
-      forAll(testData) { (ranges: Seq[Range[Integer]], expectedSize: Int) =>
-        SeatBlocks(ranges).seatCount shouldBe expectedSize
+      forAll(testData) { (ranges: Seq[(Int, Int)], expectedSize: Int) =>
+        SeatBlocks.fromPairs(ranges).seatCount shouldBe expectedSize
       }
     }
 
     "not allow ranges involving non-positive numbers" in {
       val testData = Table(
         "Ranges",
-        Seq(Range.of(-5, -1)),
-        Seq(Range.of(1, -1)),
-        Seq(Range.of(1, 10), Range.of(-5, 0)),
-        Seq(Range.of(-10, -5), Range.of(10, 11))
+        Seq((-5, -1)),
+        Seq((1, -1)),
+        Seq((1, 10), (-5, 0)),
+        Seq((-10, -5), (10, 11))
       )
-      forAll(testData) { (ranges: Seq[Range[Integer]]) =>
-        an[IllegalArgumentException] should be thrownBy SeatBlocks(ranges)
+      forAll(testData) { (ranges: Seq[(Int, Int)]) =>
+        an[IllegalArgumentException] should be thrownBy SeatBlocks.fromPairs(ranges)
       }
     }
 
     "not have overlapping ranges" in {
       val testData = Table(
         "Ranges",
-        Seq(Range.of(1, 6), Range.of(6, 15)),
-        Seq(Range.of(1, 16), Range.of(15, 16)),
-        Seq(Range.of(2, 5), Range.of(6, 8), Range.of(7, 10)),
-        Seq(Range.of(55, 100), Range.of(57, 58)),
-        Seq(Range.of(42, 42), Range.of(42, 42)),
-        Seq(Range.of(42, 48), Range.of(42, 48))
+        Seq((1, 6), (6, 15)),
+        Seq((1, 16), (15, 16)),
+        Seq((2, 5), (6, 8), (7, 10)),
+        Seq((55, 100), (57, 58)),
+        Seq((42, 42), (42, 42)),
+        Seq((42, 48), (42, 48))
       )
-      forAll(testData) { (ranges: Seq[Range[Integer]]) =>
-        an [IllegalArgumentException] should be thrownBy SeatBlocks(ranges)
+      forAll(testData) { (ranges: Seq[(Int, Int)]) =>
+        an [IllegalArgumentException] should be thrownBy SeatBlocks.fromPairs(ranges)
       }
     }
 
@@ -81,6 +81,21 @@ class SeatingMapTest extends UnitSpec {
         )
         forAll(testData) { (seatCount: Int) =>
           an[IllegalArgumentException] should be thrownBy Row(1, "R", seatCount)
+        }
+      }
+    }
+    "have an odd number of seats" should {
+      "have a middle point that is between the center two seats" in {
+        val testData = Table(
+          ("Number of Seats", "Middle Point"),
+          (2, 2),
+          (4, 3),
+          (10, 6),
+          (20, 11),
+          (100, 51)
+        )
+        forAll(testData) { (numberOfSeats: Int, middlePoint: Int) =>
+          Row.getMiddlePoint(numberOfSeats) shouldBe middlePoint
         }
       }
     }
