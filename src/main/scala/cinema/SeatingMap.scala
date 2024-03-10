@@ -9,15 +9,17 @@ object Row:
 
   def getMiddlePoint(numberOfSeats: Int): Int = ((numberOfSeats + 1) / 2 + 1)
 
+  type SeatBlock = Range[Integer]
+
   /**
    * SeatBlocks represents a collection of seats numbers in a particular Row.
    * The ranges are indicated by from and to integers (inclusive).
    * The ranges are positive and cannot exceed a max value (the Row's max number of seats)
   **/
-  opaque type SeatBlocks = Seq[Range[Integer]]
+  opaque type SeatBlocks = Seq[SeatBlock]
 
   object SeatBlocks:
-    def apply(ranges: Seq[Range[Integer]]): SeatBlocks = {
+    def apply(ranges: Seq[SeatBlock]): SeatBlocks = {
       require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0)
         && !isOverlapping(ranges)
       )
@@ -27,7 +29,7 @@ object Row:
     def fromPairs(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(ranges.map(pair => Range.of(pair._1, pair._2)))
 
 
-    private def isOverlapping(ranges: Seq[Range[Integer]]) =
+    private def isOverlapping(ranges: Seq[SeatBlock]) =
       if (ranges.length <= 1) false
       else {
         val sorted = ranges.sortWith(_.getMinimum <= _.getMinimum)
