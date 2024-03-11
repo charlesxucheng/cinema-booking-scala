@@ -3,13 +3,18 @@ package cinema
 import cinema.Row.SeatBlocks
 import org.apache.commons.lang3.Range
 
+import scala.annotation.targetName
+
 
 object Row:
   def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks(Seq(Range.of(1, seatCount))))
-
-  def getMiddlePoint(numberOfSeats: Int): Int = ((numberOfSeats + 1) / 2 + 1)
+  def apply(id: Int, seatCount: Int): Row = Row.apply(id, id.toString, seatCount)
 
   type SeatBlock = Range[Integer]
+
+  extension(seatBlock: SeatBlock)
+    def size: Int = seatBlock.getMaximum - seatBlock.getMinimum + 1
+    def of(from: Int, to: Int): SeatBlock = Range.of(from, to)
 
   /**
    * SeatBlocks represents a collection of seats numbers in a particular Row.
@@ -26,6 +31,8 @@ object Row:
       ranges
     }
 
+    def empty: SeatBlocks = SeatBlocks(Seq.empty)
+
     def fromPairs(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(ranges.map(pair => Range.of(pair._1, pair._2)))
 
 
@@ -41,9 +48,17 @@ object Row:
 
   extension (seatBlocks: SeatBlocks)
     def seatCount: Int = seatBlocks.map(range => range.getMaximum - range.getMinimum + 1).sum
+    def map[B](f: Range[Integer] => B): Seq[B] = seatBlocks.map(f)
+    
+    @targetName("append")
+    def +:(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(seatBlock +: seatBlocks)
+    def ++(b: SeatBlocks): SeatBlocks = SeatBlocks(seatBlocks ++ b)
 
-case class Row private(id: Int, name: String, seatCount: Int, availableSeats: SeatBlocks):
+
+case class Row private(id: Int, name: String, seatCount: Int, availableSeats: SeatBlocks) {
   require(id > 0 && seatCount > 0 && availableSeats.seatCount <= seatCount)
+  val midPoint: Int = (seatCount + 1) / 2 + 1
+}
 
 sealed trait SeatingMap:
   def capacity: Int

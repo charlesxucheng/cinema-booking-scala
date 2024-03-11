@@ -94,8 +94,8 @@ class SeatingMapTest extends UnitSpec {
           (20, 11),
           (100, 51)
         )
-        forAll(testData) { (numberOfSeats: Int, middlePoint: Int) =>
-          Row.getMiddlePoint(numberOfSeats) shouldBe middlePoint
+        forAll(testData) { (numberOfSeats: Int, midPoint: Int) =>
+          Row(1, numberOfSeats).midPoint shouldBe midPoint
         }
       }
     }
