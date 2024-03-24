@@ -29,7 +29,7 @@ object Row {
       require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0)
         && !isOverlapping(ranges)
       )
-      ranges
+      ranges.sortWith(_.getMinimum <= _.getMinimum) // always sort the incoming Ranges
     }
 
     def empty: SeatBlocks = SeatBlocks(Seq.empty)
@@ -54,6 +54,7 @@ object Row {
 
     @targetName("prepended")
     def +:(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(seatBlock +: seatBlocks)
+
     @targetName("concat")
     def ++(b: SeatBlocks): SeatBlocks = SeatBlocks(seatBlocks ++ b)
 }
