@@ -7,10 +7,10 @@ import java.time.{LocalDate, LocalDateTime, LocalTime, Duration as JDuration}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
 
-object MovieDurations:
+object MovieDurations {
   opaque type MovieDuration = Duration
 
-  object MovieDuration:
+  object MovieDuration {
     val minDuration: Duration = 1.minutes
     val maxDuration: Duration = 23.hours
 
@@ -27,8 +27,10 @@ object MovieDurations:
 
     given durationToMovieDuration: Conversion[Duration, MovieDuration] with
       def apply(d: Duration): MovieDuration = MovieDuration(d)
+  }
+}
 
-object Movie:
+object Movie {
 
   private val defaultDate: LocalDate = LocalDate.of(1977, 1, 1)
 
@@ -38,7 +40,9 @@ object Movie:
   def createMovie(title: String, duration: MovieDuration, showTimes: Seq[LocalTime]): Movie = {
     new Movie(title, duration, showTimes.sorted.map(defaultDate.atTime))
   }
-case class Movie private (title: String, duration: MovieDuration, showTimes: Seq[LocalDateTime]):
+}
+
+case class Movie private (title: String, duration: MovieDuration, showTimes: Seq[LocalDateTime]) {
   require(title.trim.nonEmpty && showTimesValid())
 
   private def showTimesValid(): Boolean =
@@ -58,9 +62,9 @@ case class Movie private (title: String, duration: MovieDuration, showTimes: Seq
     val pairs = earliestStartTimesAllowed
       .zip(sortedShowTimes.tail :+ sortedShowTimes.head.plus(JDuration.of(24, ChronoUnit.HOURS)))
     pairs.foreach(pair => {
-      println(pair._1.toString + "---" + pair._2.toString )
+      println(pair._1.toString + "---" + pair._2.toString)
     })
     !pairs.exists(pair => pair._1.isAfter(pair._2))
   }
-
+}
 
