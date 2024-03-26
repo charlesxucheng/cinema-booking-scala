@@ -63,7 +63,22 @@ class SeatingMapTest extends UnitSpec {
         an [IllegalArgumentException] should be thrownBy SeatBlocks.fromPairs(ranges)
       }
     }
+  }
 
+  "The difference between SeatBlocks A and B" should {
+    "be the ranges that is in A but not in B" in {
+      val testData = Table(
+        ("SeatBlocks A", "SeatBlocks B", "Diff"),
+        (Seq((1, 20)), Seq((1, 10)), Seq((11, 20))),
+        (Seq((1, 20)), Seq((1, 20)), Seq.empty),
+        (Seq((4, 8)), Seq((8, 8), (4, 5)), Seq((6, 7))),
+        (Seq((1, 26)), Seq((1, 10), (12, 14), (21, 25)), Seq((11, 11), (15, 20), (26, 26))),
+      )
+
+      forAll(testData) { (first: Seq[(Int, Int)], second: Seq[(Int, Int)], diff: Seq[(Int, Int)]) =>
+        SeatBlocks.fromPairs(first) -- SeatBlocks.fromPairs(second) shouldBe SeatBlocks.fromPairs(diff)
+      }
+    }
   }
 
   "A Row" when {
