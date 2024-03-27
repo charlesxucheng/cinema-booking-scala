@@ -39,7 +39,7 @@ class MovieTest extends UnitSpec {
     }
 
     "not allow empty show times" in {
-      an [IllegalArgumentException] should be thrownBy Movie.createMovie("Aladdin", durationA, Seq.empty)
+      an [IllegalArgumentException] should be thrownBy Movie.create("Aladdin", durationA, Seq.empty)
     }
 
     s"allow show times that have at least ${MovieTheatre.minIntermission} in between" in {
@@ -51,7 +51,7 @@ class MovieTest extends UnitSpec {
         (2.minutes, Seq(LocalTime.of(23, 55), LocalTime.of(0, 30)))
       )
       forAll(testData) { (duration: Duration, showTimes: Seq[LocalTime]) =>
-        Movie.createMovie("Goodfellas", duration, showTimes) shouldBe a [Movie]
+        Movie.create("Goodfellas", duration, showTimes) shouldBe a [Movie]
       }
     }
 
@@ -64,7 +64,7 @@ class MovieTest extends UnitSpec {
         (240.minutes, Seq(LocalTime.of(23, 5), LocalTime.of(2, 0)))
       )
       forAll(testData) { (duration: Duration, showTimes: Seq[LocalTime]) =>
-        an [IllegalArgumentException] should be thrownBy Movie.createMovie("Goodfellas", duration, showTimes)
+        an [IllegalArgumentException] should be thrownBy Movie.create("Goodfellas", duration, showTimes)
       }
     }
   }

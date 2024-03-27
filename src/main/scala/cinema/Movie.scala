@@ -31,13 +31,12 @@ object MovieDurations {
 }
 
 object Movie {
-
   private val defaultDate: LocalDate = LocalDate.of(1977, 1, 1)
 
   def apply(title: String, duration: MovieDuration, showTime: LocalTime) =
     new Movie(title, duration, Seq(defaultDate.atTime(showTime)))
 
-  def createMovie(title: String, duration: MovieDuration, showTimes: Seq[LocalTime]): Movie = {
+  def create(title: String, duration: MovieDuration, showTimes: Seq[LocalTime]): Movie = {
     new Movie(title, duration, showTimes.sorted.map(defaultDate.atTime))
   }
 }
@@ -61,9 +60,6 @@ case class Movie private (title: String, duration: MovieDuration, showTimes: Seq
 
     val pairs = earliestStartTimesAllowed
       .zip(sortedShowTimes.tail :+ sortedShowTimes.head.plus(JDuration.of(24, ChronoUnit.HOURS)))
-    pairs.foreach(pair => {
-      println(pair._1.toString + "---" + pair._2.toString)
-    })
     !pairs.exists(pair => pair._1.isAfter(pair._2))
   }
 }
