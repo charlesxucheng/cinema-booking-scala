@@ -15,9 +15,9 @@ object SeatAllocationStrategy {
   case class AllocatedSeatBlocks(rowId: Int, seatBlocks: SeatBlocks)
 
   type AllocationResult = (Seq[AllocatedSeatBlocks], SeatingMap)
-  case class SingleBlockAllocationResult(allocatedSeatBlock: SeatBlock, remainingSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
-  case class SingleRowAllocationResult(allocatedSeatBlocks: SeatBlocks, remainingSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
-  case class SeatingMapAllocationResult(allocatedSeatBlocks: AllocatedSeatBlocks, updatedSeatMap: SeatingMap)
+  case class SingleBlockAllocationResult(allocatedSeatBlock: SeatBlock, numberOfSeatsToAllocate: Int)
+  case class SingleRowAllocationResult(allocatedSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
+  case class SeatingMapAllocationResult(allocatedSeatBlocks: AllocatedSeatBlocks, updatedSeatingMap: SeatingMap)
 }
 
 trait SeatAllocationStrategy {
@@ -46,22 +46,20 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
 
   private def allocateSeatsForRow(row: Row, numberOfSeatsRequested: Int): SingleRowAllocationResult = {
     val sortedSeatBlocks = sortSeatBlocksByDistanceToRefPoint(row, row.midPoint)
-
-    allocateSeatsFromSeatBlocksOfRow(sortedSeatBlocks, SeatBlocks.empty, SeatBlocks.empty, numberOfSeatsRequested, row.midPoint)
+    allocateSeatsFromSeatBlocksOfRow(sortedSeatBlocks, SeatBlocks.empty, numberOfSeatsRequested, row.midPoint)
   }
 
   @tailrec
   private def allocateSeatsFromSeatBlocksOfRow(sortedSeatBlocks: Seq[(SeatBlock, PositionToRefPoint, Int)],
                                                allocatedSeatBlocks: SeatBlocks,
-                                               remainingSeatBlocks: SeatBlocks,
                                                numberOfSeatsRequested: Int,
                                                refPoint: Int,
                                               ): SingleRowAllocationResult = {
     sortedSeatBlocks match {
-      case Nil => SingleRowAllocationResult(allocatedSeatBlocks, remainingSeatBlocks, 0)
+      case Nil => SingleRowAllocationResult(allocatedSeatBlocks, 0)
       case x +: xs =>
         val result = allocateSeatsFromSeatBlock(x._1, refPoint, x._2, numberOfSeatsRequested)
-        allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, remainingSeatBlocks ++ result._2, numberOfSeatsRequested, refPoint)
+        allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, numberOfSeatsRequested, refPoint)
     }
   }
 
@@ -72,42 +70,30 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
    * @param refPoint               The reference point
    * @param position               The position of the seatBlock in relation to the reference point
    * @param numberOfSeatsRequested The number of seats requested
-   * @return a 3-tuple with the allocated seats, the remaining seat block(s) after allocation, and the number of seats to be allocated after this operation
+   * @return Allocation result consisting of the allocated seat block and the number of remaining seats to be allocated
    */
   private def allocateSeatsFromSeatBlock(seatBlock: SeatBlock, refPoint: Int, position: PositionToRefPoint, numberOfSeatsRequested: Int): SingleBlockAllocationResult = {
     if (seatBlock.size <= numberOfSeatsRequested)
-      SingleBlockAllocationResult(seatBlock, SeatBlocks.empty, 0)
+      SingleBlockAllocationResult(seatBlock, numberOfSeatsRequested - seatBlock.size)
     else {
-      position match {
+      val allocatedBlock = position match {
         case LEFT =>
-          val allocatedBlock = Range.of(seatBlock.getMaximum - numberOfSeatsRequested + 1, seatBlock.getMaximum)
-          val remainingBlock = Range.of(seatBlock.getMinimum, seatBlock.getMaximum - numberOfSeatsRequested)
-          SingleBlockAllocationResult(allocatedBlock, SeatBlocks(Seq(remainingBlock)), remainingBlock.size)
+          Range.of(seatBlock.getMaximum - numberOfSeatsRequested + 1, seatBlock.getMaximum)
         case RIGHT =>
-          val allocatedBlock = Range.of(seatBlock.getMinimum, seatBlock.getMinimum + numberOfSeatsRequested - 1)
-          val remainingBlock = Range.of(seatBlock.getMinimum + numberOfSeatsRequested, seatBlock.getMaximum)
-          SingleBlockAllocationResult(allocatedBlock, SeatBlocks(Seq(remainingBlock)), remainingBlock.size)
+          Range.of(seatBlock.getMinimum, seatBlock.getMinimum + numberOfSeatsRequested - 1)
         case COVERS =>
           val startPoint = refPoint - numberOfSeatsRequested / 2
           val endPoint = startPoint + numberOfSeatsRequested - 1
-          val range = Range.of(startPoint, endPoint)
-          // Shift the range to fit into the seat block if required
+          val blockCenteredAtRefPoint = Range.of(startPoint, endPoint)
           val offset =
-            if (range.getMinimum < seatBlock.getMinimum)
-              seatBlock.getMinimum - range.getMinimum
-            else if (range.getMaximum > seatBlock.getMaximum)
-              range.getMaximum - seatBlock.getMaximum
+            if (blockCenteredAtRefPoint.getMinimum < seatBlock.getMinimum)
+              seatBlock.getMinimum - blockCenteredAtRefPoint.getMinimum
+            else if (blockCenteredAtRefPoint.getMaximum > seatBlock.getMaximum)
+              blockCenteredAtRefPoint.getMaximum - seatBlock.getMaximum
             else 0
-          val allocatedBlock = Range.of(range.getMinimum + offset, range.getMaximum + offset)
-          val remainingBlocks = ListBuffer.empty[Range[Integer]]
-          if (allocatedBlock.getMinimum > seatBlock.getMinimum) {
-            remainingBlocks += Range.of(seatBlock.getMinimum, allocatedBlock.getMinimum - 1)
-          }
-          if (allocatedBlock.getMaximum < seatBlock.getMaximum) {
-            remainingBlocks += Range.of(allocatedBlock.getMaximum + 1, seatBlock.getMaximum)
-          }
-          SingleBlockAllocationResult(allocatedBlock, SeatBlocks(remainingBlocks.toList), remainingBlocks.map(_.size).sum)
+          Range.of(blockCenteredAtRefPoint.getMinimum + offset, blockCenteredAtRefPoint.getMaximum + offset)
       }
+      SingleBlockAllocationResult(allocatedBlock, 0)
     }
   }
 
