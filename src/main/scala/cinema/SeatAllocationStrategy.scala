@@ -9,13 +9,15 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class AllocatedSeatBlocks(rowId: Int, seatBlocks: SeatBlocks)
 
 object SeatAllocationStrategy {
-  type AllocationResult = Seq[AllocatedSeatBlocks]
 
+  case class AllocatedSeatBlocks(rowId: Int, seatBlocks: SeatBlocks)
+
+  type AllocationResult = (Seq[AllocatedSeatBlocks], SeatingMap)
   case class SingleBlockAllocationResult(allocatedSeatBlock: SeatBlock, remainingSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
   case class SingleRowAllocationResult(allocatedSeatBlocks: SeatBlocks, remainingSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
+  case class SeatingMapAllocationResult(allocatedSeatBlocks: AllocatedSeatBlocks, updatedSeatMap: SeatingMap)
 }
 
 trait SeatAllocationStrategy {
@@ -32,10 +34,15 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   import PositionToRefPoint.*
 
   override def allocateSeats(seatingMap: SeatingMap, numberOfSeatsRequested: Int): AllocationResult = {
+    require(numberOfSeatsRequested > 0)
     val currentRow = seatingMap.seats.last
     val result = allocateSeatsForRow(currentRow, numberOfSeatsRequested)
-    Seq(AllocatedSeatBlocks(currentRow.id, result._1))
+    val allocatedBlocks = Seq(AllocatedSeatBlocks(currentRow.id, result.allocatedSeatBlocks))
+    val updatedRows = IndexedSeq(currentRow.assignSeats(result.allocatedSeatBlocks))
+    val updatedSeatingMap = seatingMap.bookSeats(updatedRows)
+    (allocatedBlocks, updatedSeatingMap)
   }
+
 
   private def allocateSeatsForRow(row: Row, numberOfSeatsRequested: Int): SingleRowAllocationResult = {
     val sortedSeatBlocks = sortSeatBlocksByDistanceToRefPoint(row, row.midPoint)
