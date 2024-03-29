@@ -18,6 +18,8 @@ object Row {
 
   def apply(id: Int, seatCount: Int): Row = Row.apply(id, id.toString, seatCount)
 
+  def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks.empty)
+
   private def isOverlapping(ranges: Seq[SeatBlock]): Boolean =
     if (ranges.length <= 1)
       false
@@ -31,17 +33,15 @@ object Row {
   extension (seatBlock: SeatBlock)
     def size: Int = seatBlock.getMaximum - seatBlock.getMinimum + 1
     def of(from: Int, to: Int): SeatBlock = {
-      require(from >= 0)
+      require(from > 0 && to > 0)
       Range.of(from, to)
     }
 
-  def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks.empty)
-
   object SeatBlocks {
     def apply(ranges: Seq[SeatBlock]): SeatBlocks = {
-      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0)
-        && !isOverlapping(ranges)
-      )
+      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0))
+      require(!isOverlapping(ranges))
+
       ranges.sortWith(_.getMinimum <= _.getMinimum) // always sort the incoming Ranges
     }
 
@@ -71,12 +71,10 @@ object Row {
           accumulatedDiff
       }
     }
-
   }
 
 
   extension (seatBlocks: SeatBlocks)
-
     def seatCount: Int = seatBlocks.map(range => range.getMaximum - range.getMinimum + 1).sum
 
     def toSeq: Seq[SeatBlock] = seatBlocks
@@ -89,18 +87,23 @@ object Row {
     @targetName("concat")
     def ++(b: SeatBlocks): SeatBlocks = SeatBlocks(seatBlocks ++ b)
 
-    @targetName("minus")
-    def --(b: SeatBlocks): SeatBlocks = SeatBlocks.minusRec(seatBlocks, b, Seq.empty)
-
+    @targetName("diff")
+    def --(other: SeatBlocks): SeatBlocks = {
+      SeatBlocks.minusRec(seatBlocks, other, Seq.empty)
+    }
 }
 
 case class Row private(id: Int, name: String, seatCount: Int, bookedSeats: SeatBlocks) {
-  require(id > 0 && seatCount > 0 && bookedSeats.seatCount <= seatCount)
+  require(id > 0 && name.length <= 20)
+  require(seatCount > 0 && bookedSeats.seatCount <= seatCount)
   val midPoint: Int = seatCount / 2 + 1
 
   val availableSeats: SeatBlocks = SeatBlocks(Seq(Range.of(1, seatCount))) -- bookedSeats
 
-  def assignSeats(seatBlocks: SeatBlocks): Row = this.copy(bookedSeats = bookedSeats ++ seatBlocks)
+  def assignSeats(seatBlocks: SeatBlocks): Row = {
+    require(!isOverlapping((bookedSeats ++ seatBlocks).toSeq))
+    this.copy(bookedSeats = bookedSeats ++ seatBlocks)
+  }
 }
 
 sealed trait SeatingMap {
@@ -130,5 +133,8 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row]) e
 
   override def availableSeatCount: Int = seats.map(_.availableSeats.seatCount).sum
 
-  override def bookSeats(updatedSeats: IndexedSeq[Row]): SeatingMap = this.copy(seats = updateRows(updatedSeats))
+  override def bookSeats(updatedSeats: IndexedSeq[Row]): SeatingMap = {
+    this.seats zip updatedSeats
+    this.copy(seats = updateRows(updatedSeats))
+  }
 }
