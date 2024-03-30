@@ -91,6 +91,7 @@ object Row {
     def --(other: SeatBlocks): SeatBlocks = {
       val diffResult = SeatBlocks.minusRec(seatBlocks, other, Seq.empty)
       assert(seatBlocks.containsEveryElementOf(diffResult))
+      assert(diffResult.forall(!other.contains(_)))
       diffResult
     }
 
