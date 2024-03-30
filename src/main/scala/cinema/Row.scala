@@ -2,6 +2,7 @@ package cinema
 
 import cinema.Row.{SeatBlocks, isOverlapping}
 import org.apache.commons.lang3.Range
+import scala.collection.immutable.Range as SRange
 
 import scala.annotation.{tailrec, targetName}
 
@@ -34,6 +35,7 @@ object Row {
       require(from > 0 && to > 0)
       Range.of(from, to)
     }
+    private def toScalaRange: SRange = SRange.inclusive(seatBlock.getMinimum.toInt, seatBlock.getMaximum.toInt)
 
   object SeatBlocks {
     def apply(ranges: Seq[SeatBlock]): SeatBlocks = {
@@ -87,8 +89,17 @@ object Row {
 
     @targetName("diff")
     def --(other: SeatBlocks): SeatBlocks = {
-      SeatBlocks.minusRec(seatBlocks, other, Seq.empty)
+      val diffResult = SeatBlocks.minusRec(seatBlocks, other, Seq.empty)
+      assert(seatBlocks.containsEveryElementOf(diffResult))
+      diffResult
     }
+
+    private def containsEveryElementOf(other: SeatBlocks): Boolean = {
+      val ranges1Elements = seatBlocks.flatMap(block => block.toScalaRange)
+      val ranges2Elements = other.flatMap(block => block.toScalaRange)
+      ranges2Elements.forall { e => ranges1Elements.contains(e) }
+    }
+
 }
 
 case class Row private(id: Int, name: String, seatCount: Int, bookedSeats: SeatBlocks) {
