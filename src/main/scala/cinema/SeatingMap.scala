@@ -33,8 +33,5 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row]) e
 
   override def availableSeatCount: Int = seats.map(_.availableSeats.seatCount).sum
 
-  override def bookSeats(updatedSeats: IndexedSeq[Row]): SeatingMap = {
-    this.seats zip updatedSeats
-    this.copy(seats = updateRows(updatedSeats))
-  }
+  override def bookSeats(updatedSeats: IndexedSeq[Row]): SeatingMap = this.copy(seats = updateRows(updatedSeats))
 }
