@@ -63,7 +63,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
         if (result.numberOfSeatsToAllocate == 0)
           SingleRowAllocationResult(allocatedSeatBlocks +: result.allocatedSeatBlock, 0)
         else
-          allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, numberOfSeatsRequested, refPoint)
+          allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, result._2, refPoint)
     }
   }
 
