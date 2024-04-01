@@ -28,7 +28,8 @@ trait SeatAllocationStrategy {
 object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
 
   private enum PositionToRefPoint {
-    case LEFT, RIGHT, COVERS
+    // The ordinal values are used in sorting
+    case COVERS, RIGHT, LEFT
   }
 
   import PositionToRefPoint.*
@@ -59,7 +60,10 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
       case Nil => SingleRowAllocationResult(allocatedSeatBlocks, 0)
       case x +: xs =>
         val result = allocateSeatsFromSeatBlock(x._1, refPoint, x._2, numberOfSeatsRequested)
-        allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, numberOfSeatsRequested, refPoint)
+        if (result.numberOfSeatsToAllocate == 0)
+          SingleRowAllocationResult(allocatedSeatBlocks +: result.allocatedSeatBlock, 0)
+        else
+          allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, numberOfSeatsRequested, refPoint)
     }
   }
 
