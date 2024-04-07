@@ -28,7 +28,8 @@ object RectangularSeatingMap {
 
 // The rows and columns are both 1-based, with row 1 nearest to the screen, and column 1 being the leftmost seat.
 case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row]) extends SeatingMap {
-  require(seats.size == rows && seats.forall(_.seatCount == cols))
+  require(seats.size == rows && seats.forall(_.seatCount == cols),
+    s"Seats provided must have exactly $rows rows and $cols columns.")
 
   override val availableRows: IndexedSeq[Row] = seats.filter(row => row.availableSeats.toSeq.nonEmpty).reverse
 

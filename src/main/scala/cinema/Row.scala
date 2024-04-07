@@ -15,6 +15,8 @@ object Row {
    * */
   opaque type SeatBlocks = Seq[SeatBlock]
 
+  val minRowId = 1
+  val maxRowId = 52
   def apply(id: Int, seatCount: Int): Row = Row.apply(id, rowIdToName(id), seatCount)
 
   def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks.empty)
@@ -30,7 +32,7 @@ object Row {
     }
 
   private def rowIdToName(id: Int): String = {
-    require(id >= 1 && id <= 52, "Row ID must be between 1 and 52")
+    require(id >= minRowId && id <= maxRowId, s"Row ID must be between $minRowId and $maxRowId (both inclusive)")
     if (id <= 26) ('A' + id - 1).toChar.toString
     else "A" + ('A' + id - 27).toChar.toString
   }
@@ -38,15 +40,16 @@ object Row {
   extension (seatBlock: SeatBlock)
     def size: Int = seatBlock.getMaximum - seatBlock.getMinimum + 1
     def of(from: Int, to: Int): SeatBlock = {
-      require(from > 0 && to > 0)
+      require(from > 0 && to > 0, "Both from and to must be greater than 0")
       Range.of(from, to)
     }
     private def toScalaRange: SRange = SRange.inclusive(seatBlock.getMinimum.toInt, seatBlock.getMaximum.toInt)
 
   object SeatBlocks {
     def apply(ranges: Seq[SeatBlock]): SeatBlocks = {
-      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0))
-      require(!isOverlapping(ranges))
+      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0),
+        s"The start and end of all ranges in $ranges should be greater than 0")
+      require(!isOverlapping(ranges), s"None of the ranges in $ranges should be overlapping")
 
       ranges.sortWith(_.getMinimum <= _.getMinimum) // always sort the incoming Ranges
     }
@@ -110,14 +113,18 @@ object Row {
 }
 
 case class Row private(id: Int, name: String, seatCount: Int, bookedSeats: SeatBlocks) {
-  require(id > 0 && name.length <= 20)
-  require(seatCount > 0 && bookedSeats.seatCount <= seatCount)
+  require(id > 0, s"Row ID must be greater than zero: $id")
+  require(name.length <= 20, s"Row name must not exceed 20 characters: $name")
+  require(seatCount > 0 && bookedSeats.seatCount <= seatCount,
+    s"The row must have positive seat count ($seatCount) and the count of booked seats (${bookedSeats.seatCount} must not be larger than the total seat count")
+
   val midPoint: Int = seatCount / 2 + 1
 
   val availableSeats: SeatBlocks = SeatBlocks(Seq(Range.of(1, seatCount))) -- bookedSeats
 
   def assignSeats(seatBlocks: SeatBlocks): Row = {
-    require(!isOverlapping((bookedSeats ++ seatBlocks).toSeq))
+    require(!isOverlapping((bookedSeats ++ seatBlocks).toSeq),
+      s"Seats to be booked ($seatBlocks) cannot overlap with seats that are already booked ($bookedSeats).")
     this.copy(bookedSeats = bookedSeats ++ seatBlocks)
   }
 }

@@ -17,13 +17,12 @@ object MovieDurations {
     private def isValid(duration: Duration) = duration.gteq(minDuration) && duration.lteq(maxDuration)
 
     def apply(d: Duration): MovieDuration = {
-      require(isValid(d))
+      require(isValid(d), s"Duration $d must be within $minDuration and $maxDuration (both inclusive).")
       d
     }
 
     extension (md: MovieDuration)
-      def toDuration: Duration = md
-      def toJavaTemporalAmount: TemporalAmount = JDuration.ofNanos(md.toDuration.toNanos)
+      def toJavaTemporalAmount: TemporalAmount = JDuration.ofNanos(md.toNanos)
 
     given durationToMovieDuration: Conversion[Duration, MovieDuration] with
       def apply(d: Duration): MovieDuration = MovieDuration(d)
@@ -42,7 +41,8 @@ object Movie {
 }
 
 case class Movie private (title: String, duration: MovieDuration, showTimes: Seq[LocalDateTime]) {
-  require(title.trim.nonEmpty && showTimesValid())
+  require(title.trim.nonEmpty, "Movie title must not be empty")
+  require(showTimesValid(), s"Show times $showTimes must not be empty and there must be at least ${MovieTheatre.minIntermission} between two shows" )
 
   private def showTimesValid(): Boolean =
     if (showTimes.isEmpty) false

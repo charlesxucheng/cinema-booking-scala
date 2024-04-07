@@ -2,3 +2,5 @@
 * Display of seats
 * Allocation with specified starting point
 * Implement IO and game flow
+* Use type classes for SeatAllocationStrategy?
+* 

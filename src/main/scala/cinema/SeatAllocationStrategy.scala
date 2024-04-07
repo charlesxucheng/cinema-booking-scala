@@ -31,7 +31,7 @@ trait SeatAllocationStrategy {
 object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
 
   override def allocateSeats(seatingMap: SeatingMap, numberOfSeatsRequested: Int): AllocationResult = {
-    require(numberOfSeatsRequested > 0)
+    require(numberOfSeatsRequested > 0, s"Number of seats requested ($numberOfSeatsRequested) must be greater than 0.")
     val rowsToProcess = seatingMap.availableRows
     val result = allocateSeatsRec(rowsToProcess, numberOfSeatsRequested, Seq.empty, IndexedSeq.empty)
     val allocatedBlocks = result._1
