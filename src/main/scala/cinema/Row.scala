@@ -15,7 +15,7 @@ object Row {
    * */
   opaque type SeatBlocks = Seq[SeatBlock]
 
-  def apply(id: Int, seatCount: Int): Row = Row.apply(id, id.toString, seatCount)
+  def apply(id: Int, seatCount: Int): Row = Row.apply(id, rowIdToName(id), seatCount)
 
   def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks.empty)
 
@@ -28,6 +28,12 @@ object Row {
         .zip(sorted.tail)
         .exists(pairOfRanges => pairOfRanges._1.getMaximum >= pairOfRanges._2.getMinimum)
     }
+
+  private def rowIdToName(id: Int): String = {
+    require(id >= 1 && id <= 52, "Row ID must be between 1 and 52")
+    if (id <= 26) ('A' + id - 1).toChar.toString
+    else "A" + ('A' + id - 27).toChar.toString
+  }
 
   extension (seatBlock: SeatBlock)
     def size: Int = seatBlock.getMaximum - seatBlock.getMinimum + 1
