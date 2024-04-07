@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 sealed trait SeatingMap {
   val seats: IndexedSeq[Row]
+  val availableRows: IndexedSeq[Row]
 
   def capacity: Int
 
@@ -29,9 +30,11 @@ object RectangularSeatingMap {
 case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row]) extends SeatingMap {
   require(seats.size == rows && seats.forall(_.seatCount == cols))
 
+  override val availableRows: IndexedSeq[Row] = seats.filter(row => row.availableSeats.toSeq.nonEmpty).reverse
+
   override def capacity: Int = rows * cols
 
   override def availableSeatCount: Int = seats.map(_.availableSeats.seatCount).sum
 
-  override def bookSeats(updatedSeats: IndexedSeq[Row]): SeatingMap = this.copy(seats = updateRows(updatedSeats))
+  override def bookSeats(bookedSeats: IndexedSeq[Row]): SeatingMap = this.copy(seats = updateRows(bookedSeats))
 }

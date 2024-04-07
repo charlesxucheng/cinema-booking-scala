@@ -79,7 +79,7 @@ object Row {
 
     def toSeq: Seq[SeatBlock] = seatBlocks
 
-    def map[B](f: Range[Integer] => B): Seq[B] = seatBlocks.map(f)
+//    def map[B](f: Range[Integer] => B): Seq[B] = seatBlocks.map(f)
 
     @targetName("prepended")
     def +:(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(seatBlock +: seatBlocks)

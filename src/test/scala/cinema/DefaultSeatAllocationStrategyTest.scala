@@ -85,6 +85,36 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
         }
       }
     }
+    "given multiple row of seats and a number of seats requested which do not fits into one row" should {
+      "allocate from the last row onwards" in {
+        val testData = Table(
+          ("rows", "cols", "existingAllocation", "numberToAllocate", "allocatedSeats"),
+          (10, 20, Seq.empty, 30, Seq(Seq((1, 20)), Seq((6, 15)))),
+          (10, 20, Seq((5, 15)), 25, Seq(Seq((1, 4), (16, 20)), Seq((3, 18)))),
+          (10, 10, Seq((1, 3), (4, 9)), 12, Seq(Seq((10, 10)), Seq((1, 10)), Seq((6, 6)))),
+          (3, 10, Seq.empty, 30, Seq(Seq((1, 10)), Seq((1, 10)), Seq((1, 10))))
+        )
+        forAll(testData) { (rows: Int, cols: Int, existingAllocation: Seq[(Int, Int)], numberToAllocate: Int, allocatedSeatNumbers: Seq[Seq[(Int, Int)]]) =>
+          val initialSeatingMap = RectangularSeatingMap(rows, cols)
+          val rowsAllocated = IndexedSeq(Row(rows, cols).assignSeats(fromPairs(existingAllocation)))
+          val startSeatingMap = initialSeatingMap.bookSeats(rowsAllocated)
+          val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(startSeatingMap, numberToAllocate)
+          val expectedBlocks = (rows to 1 by -1).zip(allocatedSeatNumbers.map(fromPairs)).map(p => AllocatedSeatBlocks(p._1, p._2))
+          allocationResult._1 shouldBe expectedBlocks
+        }
+      }
+    }
+    "given a series of seat allocation requests" should {
+      "allocate seats correctly across rows" in {
+        val initialSeatingMap = RectangularSeatingMap(8, 40)
+        val firstAllocationResult = DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 30)
+        val secondAllocationResult = DefaultSeatAllocationStrategy.allocateSeats(firstAllocationResult._2, 30)
+        val thirdAllocationResult = DefaultSeatAllocationStrategy.allocateSeats(secondAllocationResult._2, 4)
+        firstAllocationResult._1 shouldBe Seq(AllocatedSeatBlocks(8, fromPairs(Seq((6, 35)))))
+        secondAllocationResult._1 shouldBe Seq(AllocatedSeatBlocks(8, fromPairs(Seq((1, 5), (36, 40)))), AllocatedSeatBlocks(7, fromPairs(Seq((11, 30)))))
+        thirdAllocationResult._1 shouldBe Seq(AllocatedSeatBlocks(7, fromPairs(Seq((31, 34)))))
+      }
+    }
   }
 
 }
