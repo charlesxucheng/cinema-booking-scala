@@ -5,11 +5,12 @@
     <option name="uncheckedWarnings" value="true" />
     <option name="featureWarnings" value="true" />
     <option name="explainTypeErrors" value="true" />
-    <profile name="sbt 1" modules="cinema-booking-scala,cinema-booking-scala_725">
+    <profile name="sbt 1" modules="cinema-booking-scala_725">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
       <option name="explainTypeErrors" value="true" />
     </profile>
+    <profile name="sbt 2" modules="cinema-booking-scala" />
   </component>
 </project>
