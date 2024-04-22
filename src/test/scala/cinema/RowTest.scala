@@ -26,13 +26,13 @@ class RowTest extends UnitSpec {
       "have a middle point that is between the center two seats" in {
         val testData = Table(
           ("Number of Seats", "Middle Point"),
-          (2, 2),
-          (4, 3),
-          (10, 6),
-          (20, 11),
-          (100, 51)
+          (2, 1.5F),
+          (4, 2.5F),
+          (10, 5.5F),
+          (20, 10.5F),
+          (100, 50.5F)
         )
-        forAll(testData) { (numberOfSeats: Int, midPoint: Int) =>
+        forAll(testData) { (numberOfSeats: Int, midPoint: Float) =>
           Row(1, numberOfSeats).midPoint shouldBe midPoint
         }
       }

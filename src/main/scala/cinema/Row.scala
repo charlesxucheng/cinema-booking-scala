@@ -15,8 +15,8 @@ object Row {
    * */
   opaque type SeatBlocks = Seq[SeatBlock]
 
-  val minRowId = 1
-  val maxRowId = 52
+  private val minRowId = 1
+  private val maxRowId = 52
   def apply(id: Int, seatCount: Int): Row = Row.apply(id, rowIdToName(id), seatCount)
 
   def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks.empty)
@@ -88,7 +88,7 @@ object Row {
 
     def toSeq: Seq[SeatBlock] = seatBlocks
 
-//    def map[B](f: Range[Integer] => B): Seq[B] = seatBlocks.map(f)
+    def map[B](f: Range[Integer] => B): Seq[B] = seatBlocks.map(f)
 
     @targetName("prepended")
     def +:(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(seatBlock +: seatBlocks)
@@ -118,7 +118,7 @@ case class Row private(id: Int, name: String, seatCount: Int, bookedSeats: SeatB
   require(seatCount > 0 && bookedSeats.seatCount <= seatCount,
     s"The row must have positive seat count ($seatCount) and the count of booked seats (${bookedSeats.seatCount} must not be larger than the total seat count")
 
-  val midPoint: Int = seatCount / 2 + 1
+  val midPoint: Float = (seatCount+1).toFloat / 2
 
   val availableSeats: SeatBlocks = SeatBlocks(Seq(Range.of(1, seatCount))) -- bookedSeats
 

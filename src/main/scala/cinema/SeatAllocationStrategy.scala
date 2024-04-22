@@ -21,6 +21,8 @@ object SeatAllocationStrategy {
   case class SingleRowAllocationResult(allocatedSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
 
   case class SeatingMapAllocationResult(allocatedSeatBlocks: AllocatedSeatBlocks, updatedSeatingMap: SeatingMap)
+  
+  def refersToASeat(refPoint: Float): Boolean = refPoint - refPoint.intValue() == 0.0
 }
 
 trait SeatAllocationStrategy {
@@ -44,26 +46,26 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   @tailrec
   private def allocateSeatsRec(rows: Seq[Row],
                                numberOfSeatsRequested: Int,
-                               allocatedSeatBlockstAcc: Seq[AllocatedSeatBlocks],
+                               allocatedSeatBlocksAcc: Seq[AllocatedSeatBlocks],
                                updatedRowsAcc: IndexedSeq[Row]): (Seq[AllocatedSeatBlocks], IndexedSeq[Row]) = {
     // Reverse the row order so last row will be used for allocation first
     rows match {
       case r +: rs =>
         if (numberOfSeatsRequested == 0)
-          (allocatedSeatBlockstAcc, updatedRowsAcc)
+          (allocatedSeatBlocksAcc, updatedRowsAcc)
         else {
           val result = allocateSeatsForRow(r, numberOfSeatsRequested)
           val allocatedBlocks = Seq(AllocatedSeatBlocks(r.id, result.allocatedSeatBlocks))
           val updatedRow = r.assignSeats(result.allocatedSeatBlocks)
           allocateSeatsRec(rs,
             result.numberOfSeatsToAllocate,
-            allocatedSeatBlockstAcc ++ allocatedBlocks,
+            allocatedSeatBlocksAcc ++ allocatedBlocks,
             updatedRowsAcc :+ updatedRow
           )
         }
       case Seq() =>
         assert(numberOfSeatsRequested == 0)
-        (allocatedSeatBlockstAcc, updatedRowsAcc)
+        (allocatedSeatBlocksAcc, updatedRowsAcc)
     }
   }
 
@@ -73,10 +75,10 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   }
 
   @tailrec
-  private def allocateSeatsFromSeatBlocksOfRow(sortedSeatBlocks: Seq[(SeatBlock, PositionToRefPoint, Int)],
+  private def allocateSeatsFromSeatBlocksOfRow(sortedSeatBlocks: Seq[(SeatBlock, PositionToRefPoint, Float)],
                                                allocatedSeatBlocks: SeatBlocks,
                                                numberOfSeatsRequested: Int,
-                                               refPoint: Int,
+                                               refPoint: Float,
                                               ): SingleRowAllocationResult = {
     sortedSeatBlocks match {
       case Nil => SingleRowAllocationResult(allocatedSeatBlocks, numberOfSeatsRequested)
@@ -89,6 +91,13 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
     }
   }
 
+
+  private def deriveEndPoint(refPoint: Float, numberOfSeatsRequested: Int) = 
+    if (refersToASeat(refPoint))
+      refPoint.intValue + numberOfSeatsRequested / 2
+    else
+      math.ceil(refPoint).intValue + numberOfSeatsRequested / 2 - (1 - numberOfSeatsRequested % 2)
+
   /**
    * Allocates seats from a seatBlock.
    *
@@ -98,7 +107,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
    * @param numberOfSeatsRequested The number of seats requested
    * @return Allocation result consisting of the seat block allocated and the number of seats yet to be allocated
    */
-  private def allocateSeatsFromSeatBlock(seatBlock: SeatBlock, refPoint: Int, position: PositionToRefPoint, numberOfSeatsRequested: Int): SingleBlockAllocationResult = {
+  private def allocateSeatsFromSeatBlock(seatBlock: SeatBlock, refPoint: Float, position: PositionToRefPoint, numberOfSeatsRequested: Int): SingleBlockAllocationResult = {
     if (seatBlock.size <= numberOfSeatsRequested)
       SingleBlockAllocationResult(seatBlock, numberOfSeatsRequested - seatBlock.size)
     else {
@@ -108,22 +117,24 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
         case RIGHT =>
           Range.of(seatBlock.getMinimum, seatBlock.getMinimum + numberOfSeatsRequested - 1)
         case COVERS =>
-          val startPoint = refPoint - numberOfSeatsRequested / 2
-          val endPoint = startPoint + numberOfSeatsRequested - 1
+          val endPoint = deriveEndPoint(refPoint, numberOfSeatsRequested)
+          val startPoint = endPoint - numberOfSeatsRequested + 1
           val blockCenteredAtRefPoint = Range.of(startPoint, endPoint)
+
           val offset =
             if (blockCenteredAtRefPoint.getMinimum < seatBlock.getMinimum)
               seatBlock.getMinimum - blockCenteredAtRefPoint.getMinimum
             else if (blockCenteredAtRefPoint.getMaximum > seatBlock.getMaximum)
               blockCenteredAtRefPoint.getMaximum - seatBlock.getMaximum
             else 0
+
           Range.of(blockCenteredAtRefPoint.getMinimum + offset, blockCenteredAtRefPoint.getMaximum + offset)
       }
       SingleBlockAllocationResult(allocatedBlock, 0)
     }
   }
 
-  private def sortSeatBlocksByDistanceToRefPoint(row: Row, refPoint: Int): Seq[(SeatBlock, PositionToRefPoint, Int)] =
+  private def sortSeatBlocksByDistanceToRefPoint(row: Row, refPoint: Float): Seq[(SeatBlock, PositionToRefPoint, Float)] =
     assert(row.seatCount > 0)
     row.availableSeats.toSeq
       .map(seatBlock => {
@@ -133,7 +144,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
       })
       .sortBy { case (seatBlock, position, distance) => (distance, position.ordinal) }
 
-  private def distanceToRefPoint(seatBlock: SeatBlock, relativePosition: PositionToRefPoint, refPoint: Int) = {
+  private def distanceToRefPoint(seatBlock: SeatBlock, relativePosition: PositionToRefPoint, refPoint: Float) = {
     relativePosition match {
       case COVERS => 0
       case LEFT => refPoint - seatBlock.getMaximum
@@ -141,9 +152,9 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
     }
   }
 
-  private def positionToRefPoint(seatBlock: SeatBlock, midPoint: Int) =
-    if (seatBlock.getMaximum < midPoint) LEFT
-    else if (seatBlock.getMinimum > midPoint) RIGHT
+  private def positionToRefPoint(seatBlock: SeatBlock, refPoint: Float) =
+    if (seatBlock.getMaximum < refPoint) LEFT
+    else if (seatBlock.getMinimum > refPoint) RIGHT
     else COVERS
 
   private enum PositionToRefPoint {

@@ -1,6 +1,5 @@
 package cinema
 
-
 import cinema.Row.SeatBlocks
 import cinema.Row.SeatBlocks.*
 import cinema.SeatingMapView.{*, given}
@@ -8,7 +7,6 @@ import org.apache.commons.lang3.Range
 import org.scalatest.Inspectors
 import org.scalatest.matchers.should.Matchers.*
 
-import scala.language.postfixOps
 
 class SeatingMapViewTest extends UnitSpec {
 
@@ -50,6 +48,22 @@ class SeatingMapViewTest extends UnitSpec {
       }}
     }
   }
-  
+
+  "An empty SeatingMap" should {
+    "display all seats as available" in {
+      RectangularSeatingMap(5, 5).viewAsMultiPartContent.seats shouldBe Seq(
+        "1 o o o o o", "2 o o o o o", "3 o o o o o", "4 o o o o o", "5 o o o o o")
+    }
+  }
+
+  "A SeatingMap with some bookings" should {
+    "show booked seats as booked" in {
+      val initialSeatingMap = RectangularSeatingMap(5, 5)
+      val updatedSeatingMap = DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 2)._2
+      
+      updatedSeatingMap.viewAsMultiPartContent.seats shouldBe Seq(
+        "1 o o o o o", "2 o o o o o", "3 o o o o o", "4 o o o o o", "5 o o x x o")
+    }
+  }
 
 }

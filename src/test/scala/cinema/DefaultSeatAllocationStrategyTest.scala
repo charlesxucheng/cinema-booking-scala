@@ -12,6 +12,10 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
       "allocate the center seats (with a right bias, i.e. if it cannot be perfectly centered, then it will take 1 more seat to the right than left)" in {
         val testData = Table(
           ("rows", "cols", "numberToAllocate", "allocatedSeats"),
+          (5, 5, 1, Seq((3, 3))),
+          (5, 5, 2, Seq((3, 4))),
+          (5, 4, 1, Seq((3, 3))),
+          (5, 4, 2, Seq((2, 3))),
           (10, 20, 2, Seq((10, 11))),
           (10, 20, 4, Seq((9, 12))),
           (20, 45, 11, Seq((18, 28))),

@@ -1,12 +1,49 @@
 package cinema
 
+import cinema.Row.size
 import cinema.Row.{SeatBlocks, isOverlapping}
 import cinema.SeatingMapView.{longHeader, shortHeader}
 import org.apache.commons.lang3.Range
 
 import scala.annotation.{tailrec, targetName}
 import scala.collection.mutable.ListBuffer
+object SeatingMap {
+  given SeatingMapView[SeatingMap] with
+    extension (m: SeatingMap) def viewAsSingleString: String = {
+      val content = viewAsMultiPartContent(m)
+      val headerLine = content.header + System.lineSeparator()
+      val separationLine = content.separator + System.lineSeparator()
+      val seatLines = content.seats.foldLeft("")((a, b) => a + b + System.lineSeparator())
+      headerLine + separationLine + seatLines
+    }
 
+    extension (m: SeatingMap) def viewAsMultiPartContent: SeatingMapViewContent = {
+
+      val seatsContent = convertToStringValues(m)
+      val maxWidth = seatsContent.map(_.length).max
+      val headerContent = if (maxWidth < longHeader.length) shortHeader else longHeader
+
+      val leftPadding = (maxWidth - headerContent.length) / 2
+      val rightPadding = maxWidth - headerContent.length - leftPadding
+      val header = " ".repeat(leftPadding) + headerContent + " ".repeat(rightPadding)
+
+      val separator = "-".repeat(maxWidth)
+
+      SeatingMapViewContent(header, separator, seatsContent)
+    }
+
+  private def convertToStringValues(m: SeatingMap): Seq[String] = {
+    m.seats.map(r => {
+      val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats.map((false, _))
+        .sortBy(x => x._2.getMinimum)
+      val symbols = allSeats
+        .sortBy(x => x._2.getMinimum)
+        .map(b => if (b._1) " x" * b._2.size else " o" * b._2.size)
+
+      symbols.foldLeft(r.id.toString)(_ + _)
+    })
+  }
+}
 sealed trait SeatingMap {
   val seats: IndexedSeq[Row]
   val availableRows: IndexedSeq[Row]
@@ -26,35 +63,6 @@ object RectangularSeatingMap {
   def apply(rows: Int, cols: Int): RectangularSeatingMap =
     RectangularSeatingMap(rows, cols, (1 to rows).map(rowId => Row(rowId, rowId.toString, cols)))
 
-  given SeatingMapView[RectangularSeatingMap] with
-    extension (m: RectangularSeatingMap) def viewAsSingleString: String = {
-        val content = viewAsMultiPartContent(m)
-        val headerLine = content.header + System.lineSeparator()
-        val separationLine = content.separator + System.lineSeparator()
-        val seatLines = content.seats.foldLeft("")((a, b) => a + b + System.lineSeparator())
-        headerLine + separationLine + seatLines
-      }
-
-    extension (m: RectangularSeatingMap) def viewAsMultiPartContent: SeatingMapViewContent = {
-
-      val seatsContent = convertToStringValues(m)
-      val maxWidth = seatsContent.map(_.length).max
-      val headerContent = if (maxWidth < longHeader.length) shortHeader else longHeader
-
-      val leftPadding = (maxWidth - headerContent.length) / 2
-      val rightPadding = maxWidth - headerContent.length - leftPadding
-      val header = " ".repeat(leftPadding) + headerContent + " ".repeat(rightPadding)
-
-      val separator = "-".repeat(maxWidth)
-
-      SeatingMapViewContent(header, separator, seatsContent)
-    }
-
-  private def convertToStringValues(m: RectangularSeatingMap): Seq[String] = {
-    m.seats.map(r => {
-      (1 to r.seatCount).foldLeft(r.id.toString)((a, b) => a + ' ' + 'o')
-    })
-  }
 }
 
 // The rows and columns are both 1-based, with row 1 nearest to the screen, and column 1 being the leftmost seat.
