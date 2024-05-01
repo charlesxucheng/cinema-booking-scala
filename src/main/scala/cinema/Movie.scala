@@ -4,7 +4,6 @@ import cinema.MovieDurations.MovieDuration
 
 import java.time.temporal.{ChronoUnit, TemporalAmount}
 import java.time.{LocalDate, LocalDateTime, LocalTime, Duration as JDuration}
-import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
 
 object MovieDurations {
@@ -14,12 +13,12 @@ object MovieDurations {
     val minDuration: Duration = 1.minutes
     val maxDuration: Duration = 23.hours
 
-    private def isValid(duration: Duration) = duration.gteq(minDuration) && duration.lteq(maxDuration)
-
     def apply(d: Duration): MovieDuration = {
       require(isValid(d), s"Duration $d must be within $minDuration and $maxDuration (both inclusive).")
       d
     }
+
+    private def isValid(duration: Duration) = duration.gteq(minDuration) && duration.lteq(maxDuration)
 
     extension (md: MovieDuration)
       def toJavaTemporalAmount: TemporalAmount = JDuration.ofNanos(md.toNanos)
@@ -40,9 +39,9 @@ object Movie {
   }
 }
 
-case class Movie private (title: String, duration: MovieDuration, showTimes: Seq[LocalDateTime]) {
+case class Movie private(title: String, duration: MovieDuration, showTimes: Seq[LocalDateTime]) {
   require(title.trim.nonEmpty, "Movie title must not be empty")
-  require(showTimesValid(), s"Show times $showTimes must not be empty and there must be at least ${MovieTheatre.minIntermission} between two shows" )
+  require(showTimesValid(), s"Show times $showTimes must not be empty and there must be at least ${MovieTheatre.minIntermission} between two shows")
 
   private def showTimesValid(): Boolean =
     if (showTimes.isEmpty) false
@@ -60,6 +59,7 @@ case class Movie private (title: String, duration: MovieDuration, showTimes: Seq
 
     val pairs = earliestStartTimesAllowed
       .zip(sortedShowTimes.tail :+ sortedShowTimes.head.plus(JDuration.of(24, ChronoUnit.HOURS)))
+    
     !pairs.exists(pair => pair._1.isAfter(pair._2))
   }
 }

@@ -2,9 +2,9 @@ package cinema
 
 import cinema.Row.{SeatBlocks, isOverlapping}
 import org.apache.commons.lang3.Range
-import scala.collection.immutable.Range as SRange
 
 import scala.annotation.{tailrec, targetName}
+import scala.collection.immutable.Range as SRange
 
 object Row {
   type SeatBlock = Range[Integer]
@@ -17,9 +17,16 @@ object Row {
 
   private val minRowId = 1
   private val maxRowId = 52
+
   def apply(id: Int, seatCount: Int): Row = Row.apply(id, rowIdToName(id), seatCount)
 
   def apply(id: Int, name: String, seatCount: Int) = new Row(id, name, seatCount, SeatBlocks.empty)
+
+  private def rowIdToName(id: Int): String = {
+    require(id >= minRowId && id <= maxRowId, s"Row ID must be between $minRowId and $maxRowId (both inclusive)")
+    if (id <= 26) ('A' + id - 1).toChar.toString
+    else "A" + ('A' + id - 27).toChar.toString
+  }
 
   private def isOverlapping(ranges: Seq[SeatBlock]): Boolean =
     if (ranges.length <= 1)
@@ -30,12 +37,6 @@ object Row {
         .zip(sorted.tail)
         .exists(pairOfRanges => pairOfRanges._1.getMaximum >= pairOfRanges._2.getMinimum)
     }
-
-  private def rowIdToName(id: Int): String = {
-    require(id >= minRowId && id <= maxRowId, s"Row ID must be between $minRowId and $maxRowId (both inclusive)")
-    if (id <= 26) ('A' + id - 1).toChar.toString
-    else "A" + ('A' + id - 27).toChar.toString
-  }
 
   extension (seatBlock: SeatBlock)
     def size: Int = seatBlock.getMaximum - seatBlock.getMinimum + 1
@@ -59,26 +60,24 @@ object Row {
     def fromPairs(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(ranges.map(pair => Range.of(pair._1, pair._2)))
 
     @tailrec
-    def minusRec(a: SeatBlocks, b: SeatBlocks, accumulatedDiff: SeatBlocks): SeatBlocks = {
-      a.toList match {
-        case x :: xs =>
-          b.toList match {
-            case y :: ys =>
-              assert(x.containsRange(y))
-              val diffToAccumulate =
-                if (x.getMinimum < y.getMinimum) SeatBlocks.fromPairs(Seq((x.getMinimum, y.getMinimum - 1)))
-                else SeatBlocks.empty
-              val diffToPassOn =
-                if (x.getMaximum > y.getMaximum) SeatBlocks.fromPairs(Seq((y.getMaximum + 1, x.getMaximum)))
-                else SeatBlocks.empty
+    def minusRec(a: SeatBlocks, b: SeatBlocks, accumulatedDiff: SeatBlocks): SeatBlocks = a.toList match {
+      case Nil =>
+        accumulatedDiff
+      case x :: xs =>
+        b.toList match {
+          case Nil =>
+            accumulatedDiff ++ a
+          case y :: ys =>
+            assert(x.containsRange(y))
+            val diffToAccumulate =
+              if (x.getMinimum < y.getMinimum) SeatBlocks.fromPairs(Seq((x.getMinimum, y.getMinimum - 1)))
+              else SeatBlocks.empty
+            val diffToPassOn =
+              if (x.getMaximum > y.getMaximum) SeatBlocks.fromPairs(Seq((y.getMaximum + 1, x.getMaximum)))
+              else SeatBlocks.empty
 
-              minusRec(diffToPassOn, ys, accumulatedDiff ++ diffToAccumulate)
-            case Nil =>
-              accumulatedDiff ++ a
-          }
-        case Nil =>
-          accumulatedDiff
-      }
+            minusRec(diffToPassOn, ys, accumulatedDiff ++ diffToAccumulate)
+        }
     }
   }
 
@@ -118,7 +117,7 @@ case class Row private(id: Int, name: String, seatCount: Int, bookedSeats: SeatB
   require(seatCount > 0 && bookedSeats.seatCount <= seatCount,
     s"The row must have positive seat count ($seatCount) and the count of booked seats (${bookedSeats.seatCount} must not be larger than the total seat count")
 
-  val midPoint: Float = (seatCount+1).toFloat / 2
+  val midPoint: Float = (seatCount + 1).toFloat / 2
 
   val availableSeats: SeatBlocks = SeatBlocks(Seq(Range.of(1, seatCount))) -- bookedSeats
 

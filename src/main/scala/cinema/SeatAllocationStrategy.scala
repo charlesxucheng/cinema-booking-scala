@@ -7,12 +7,13 @@ import org.apache.commons.lang3.Range
 import scala.+:
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 
 object SeatAllocationStrategy {
 
   type AllocationResult = (Seq[AllocatedSeatBlocks], SeatingMap)
+
+  def refersToASeat(refPoint: Float): Boolean = refPoint - refPoint.intValue() == 0.0
 
   case class AllocatedSeatBlocks(rowId: Int, seatBlocks: SeatBlocks)
 
@@ -21,8 +22,6 @@ object SeatAllocationStrategy {
   case class SingleRowAllocationResult(allocatedSeatBlocks: SeatBlocks, numberOfSeatsToAllocate: Int)
 
   case class SeatingMapAllocationResult(allocatedSeatBlocks: AllocatedSeatBlocks, updatedSeatingMap: SeatingMap)
-  
-  def refersToASeat(refPoint: Float): Boolean = refPoint - refPoint.intValue() == 0.0
 }
 
 trait SeatAllocationStrategy {
@@ -34,10 +33,12 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
 
   override def allocateSeats(seatingMap: SeatingMap, numberOfSeatsRequested: Int): AllocationResult = {
     require(numberOfSeatsRequested > 0, s"Number of seats requested ($numberOfSeatsRequested) must be greater than 0.")
+
     val rowsToProcess = seatingMap.availableRows
     val result = allocateSeatsRec(rowsToProcess, numberOfSeatsRequested, Seq.empty, IndexedSeq.empty)
     val allocatedBlocks = result._1
     val updatedSeatingMap = seatingMap.bookSeats(result._2)
+
     (allocatedBlocks, updatedSeatingMap)
   }
 
@@ -47,9 +48,12 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   private def allocateSeatsRec(rows: Seq[Row],
                                numberOfSeatsRequested: Int,
                                allocatedSeatBlocksAcc: Seq[AllocatedSeatBlocks],
-                               updatedRowsAcc: IndexedSeq[Row]): (Seq[AllocatedSeatBlocks], IndexedSeq[Row]) = {
+                               updatedRowsAcc: IndexedSeq[Row]): (Seq[AllocatedSeatBlocks], IndexedSeq[Row]) =
     // Reverse the row order so last row will be used for allocation first
     rows match {
+      case Seq() =>
+        assert(numberOfSeatsRequested == 0)
+        (allocatedSeatBlocksAcc, updatedRowsAcc)
       case r +: rs =>
         if (numberOfSeatsRequested == 0)
           (allocatedSeatBlocksAcc, updatedRowsAcc)
@@ -63,11 +67,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
             updatedRowsAcc :+ updatedRow
           )
         }
-      case Seq() =>
-        assert(numberOfSeatsRequested == 0)
-        (allocatedSeatBlocksAcc, updatedRowsAcc)
     }
-  }
 
   private def allocateSeatsForRow(row: Row, numberOfSeatsRequested: Int): SingleRowAllocationResult = {
     val sortedSeatBlocks = sortSeatBlocksByDistanceToRefPoint(row, row.midPoint)
@@ -92,7 +92,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   }
 
 
-  private def deriveEndPoint(refPoint: Float, numberOfSeatsRequested: Int) = 
+  private def deriveEndPoint(refPoint: Float, numberOfSeatsRequested: Int) =
     if (refersToASeat(refPoint))
       refPoint.intValue + numberOfSeatsRequested / 2
     else
@@ -107,7 +107,11 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
    * @param numberOfSeatsRequested The number of seats requested
    * @return Allocation result consisting of the seat block allocated and the number of seats yet to be allocated
    */
-  private def allocateSeatsFromSeatBlock(seatBlock: SeatBlock, refPoint: Float, position: PositionToRefPoint, numberOfSeatsRequested: Int): SingleBlockAllocationResult = {
+  private def allocateSeatsFromSeatBlock(
+                                          seatBlock: SeatBlock,
+                                          refPoint: Float,
+                                          position: PositionToRefPoint,
+                                          numberOfSeatsRequested: Int): SingleBlockAllocationResult = {
     if (seatBlock.size <= numberOfSeatsRequested)
       SingleBlockAllocationResult(seatBlock, numberOfSeatsRequested - seatBlock.size)
     else {

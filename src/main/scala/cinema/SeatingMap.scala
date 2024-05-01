@@ -1,13 +1,21 @@
 package cinema
 
 import cinema.Row.size
-import cinema.Row.{SeatBlocks, isOverlapping}
 import cinema.SeatingMapView.{longHeader, shortHeader}
-import org.apache.commons.lang3.Range
 
-import scala.annotation.{tailrec, targetName}
-import scala.collection.mutable.ListBuffer
 object SeatingMap {
+  private def convertToStringValues(m: SeatingMap): Seq[String] = {
+    m.seats.map(r => {
+      val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats.map((false, _))
+        .sortBy(x => x._2.getMinimum)
+      val symbols = allSeats
+        .sortBy(x => x._2.getMinimum)
+        .map(b => if (b._1) " x" * b._2.size else " o" * b._2.size)
+
+      symbols.foldLeft(r.id.toString)(_ + _)
+    })
+  }
+
   given SeatingMapView[SeatingMap] with
     extension (m: SeatingMap) def viewAsSingleString: String = {
       val content = viewAsMultiPartContent(m)
@@ -31,19 +39,8 @@ object SeatingMap {
 
       SeatingMapViewContent(header, separator, seatsContent)
     }
-
-  private def convertToStringValues(m: SeatingMap): Seq[String] = {
-    m.seats.map(r => {
-      val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats.map((false, _))
-        .sortBy(x => x._2.getMinimum)
-      val symbols = allSeats
-        .sortBy(x => x._2.getMinimum)
-        .map(b => if (b._1) " x" * b._2.size else " o" * b._2.size)
-
-      symbols.foldLeft(r.id.toString)(_ + _)
-    })
-  }
 }
+
 sealed trait SeatingMap {
   val seats: IndexedSeq[Row]
   val availableRows: IndexedSeq[Row]
@@ -62,7 +59,6 @@ sealed trait SeatingMap {
 object RectangularSeatingMap {
   def apply(rows: Int, cols: Int): RectangularSeatingMap =
     RectangularSeatingMap(rows, cols, (1 to rows).map(rowId => Row(rowId, rowId.toString, cols)))
-
 }
 
 // The rows and columns are both 1-based, with row 1 nearest to the screen, and column 1 being the leftmost seat.
@@ -78,16 +74,3 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row]) e
 
   override def bookSeats(bookedSeats: IndexedSeq[Row]): SeatingMap = this.copy(seats = updateRows(bookedSeats))
 }
-
-object SeatingMapView {
-  val longHeader = "S C R E E N"
-  val shortHeader = "S"
-}
-
-case class SeatingMapViewContent(header: String, separator: String, seats: Seq[String])
-
-trait SeatingMapView[A <: SeatingMap] {
-  extension (a: A) def viewAsSingleString: String
-  extension (a: A) def viewAsMultiPartContent: SeatingMapViewContent
-}
-
