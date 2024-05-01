@@ -1,6 +1,6 @@
 package cinema
 
-import cinema.Row.{SeatBlock, SeatBlocks}
+import cinema.Row.SeatBlocks
 import cinema.Row.SeatBlocks.*
 import cinema.SeatAllocationStrategy.*
 import org.scalatest.matchers.should.Matchers.shouldBe

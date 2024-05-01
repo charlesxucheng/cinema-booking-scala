@@ -1,9 +1,6 @@
 package cinema
 
-import cinema.Row.SeatBlocks
-import cinema.Row.SeatBlocks.*
 import cinema.SeatingMapView.{*, given}
-import org.apache.commons.lang3.Range
 import org.scalatest.Inspectors
 import org.scalatest.matchers.should.Matchers.*
 

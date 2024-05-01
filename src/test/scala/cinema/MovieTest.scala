@@ -4,7 +4,6 @@ import cinema.MovieDurations.MovieDuration.*
 import org.scalatest.matchers.should.Matchers.shouldBe
 
 import java.time.LocalTime
-import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
 
 class MovieTest extends UnitSpec {

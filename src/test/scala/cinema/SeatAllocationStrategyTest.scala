@@ -1,8 +1,8 @@
 package cinema
 
+import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers.shouldBe
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.scalacheck.Gen
 
 class SeatAllocationStrategyTest extends UnitSpec with ScalaCheckDrivenPropertyChecks {
   "A reference point" when {
