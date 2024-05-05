@@ -1,13 +1,12 @@
 package cinema
 
 import cinema.Row.{SeatBlocks, isOverlapping}
-import org.apache.commons.lang3.Range
 
 import scala.annotation.{tailrec, targetName}
-import scala.collection.immutable.Range as SRange
+import scala.collection.immutable.Range
 
 object Row {
-  type SeatBlock = Range[Integer]
+  type SeatBlock = Range
   /**
    * SeatBlocks represents a collection of seats numbers in a particular Row.
    * The ranges are indicated by from and to integers (inclusive).
@@ -28,36 +27,35 @@ object Row {
     else "A" + ('A' + id - 27).toChar.toString
   }
 
-  private def isOverlapping(ranges: Seq[SeatBlock]): Boolean =
+  private def isOverlapping(ranges: SeatBlocks): Boolean =
     if (ranges.length <= 1)
       false
     else {
-      val sorted = ranges.sortWith(_.getMinimum <= _.getMinimum)
+      val sorted = ranges.sortWith(_.start <= _.start)
       sorted
         .zip(sorted.tail)
-        .exists(pairOfRanges => pairOfRanges._1.getMaximum >= pairOfRanges._2.getMinimum)
+        .exists(pairOfRanges => pairOfRanges._1.end >= pairOfRanges._2.start)
     }
 
   extension (seatBlock: SeatBlock)
-    def size: Int = seatBlock.getMaximum - seatBlock.getMinimum + 1
+    def size: Int = seatBlock.end - seatBlock.start + 1
     def of(from: Int, to: Int): SeatBlock = {
       require(from > 0 && to > 0, "Both from and to must be greater than 0")
-      Range.of(from, to)
+      Range.inclusive(from, to)
     }
-    private def toScalaRange: SRange = SRange.inclusive(seatBlock.getMinimum.toInt, seatBlock.getMaximum.toInt)
 
   object SeatBlocks {
     def apply(ranges: Seq[SeatBlock]): SeatBlocks = {
-      require(ranges.forall(range => range.getMaximum > 0 && range.getMinimum > 0),
+      require(ranges.forall(range => range.end > 0 && range.start > 0),
         s"The start and end of all ranges in $ranges should be greater than 0")
       require(!isOverlapping(ranges), s"None of the ranges in $ranges should be overlapping")
 
-      ranges.sortWith(_.getMinimum <= _.getMinimum) // always sort the incoming Ranges
+      ranges.sortWith(_.start <= _.start) // always sort the incoming Ranges
     }
 
     def empty: SeatBlocks = SeatBlocks(Seq.empty)
 
-    def fromPairs(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(ranges.map(pair => Range.of(pair._1, pair._2)))
+    def fromPairs(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(ranges.map(pair => Range.inclusive(pair._1, pair._2)))
 
     @tailrec
     def minusRec(a: SeatBlocks, b: SeatBlocks, accumulatedDiff: SeatBlocks): SeatBlocks = a.toList match {
@@ -68,12 +66,12 @@ object Row {
           case Nil =>
             accumulatedDiff ++ a
           case y :: ys =>
-            assert(x.containsRange(y))
+            //            assert(x.contains(y))
             val diffToAccumulate =
-              if (x.getMinimum < y.getMinimum) SeatBlocks.fromPairs(Seq((x.getMinimum, y.getMinimum - 1)))
+              if (x.start < y.start) SeatBlocks.fromPairs(Seq((x.start, y.start - 1)))
               else SeatBlocks.empty
             val diffToPassOn =
-              if (x.getMaximum > y.getMaximum) SeatBlocks.fromPairs(Seq((y.getMaximum + 1, x.getMaximum)))
+              if (x.end > y.end) SeatBlocks.fromPairs(Seq((y.end + 1, x.end)))
               else SeatBlocks.empty
 
             minusRec(diffToPassOn, ys, accumulatedDiff ++ diffToAccumulate)
@@ -83,14 +81,15 @@ object Row {
 
 
   extension (seatBlocks: SeatBlocks)
-    def seatCount: Int = seatBlocks.map(range => range.getMaximum - range.getMinimum + 1).sum
 
-    def toSeq: Seq[SeatBlock] = seatBlocks
+    def nonEmpty: Boolean = seatBlocks.nonEmpty
 
-    def map[B](f: Range[Integer] => B): Seq[B] = seatBlocks.map(f)
+    def seatCount: Int = seatBlocks.map(range => range.end - range.start + 1).sum
 
-    @targetName("prepended")
-    def +:(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(seatBlock +: seatBlocks)
+    def map[B](f: Range => B): Seq[B] = seatBlocks.map(f)
+
+    @targetName("append")
+    def :+(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(seatBlocks :+ seatBlock)
 
     @targetName("concat")
     def ++(b: SeatBlocks): SeatBlocks = SeatBlocks(seatBlocks ++ b)
@@ -103,11 +102,8 @@ object Row {
       diffResult
     }
 
-    private def containsEveryElementOf(other: SeatBlocks): Boolean = {
-      val ranges1Elements = seatBlocks.flatMap(block => block.toScalaRange)
-      val ranges2Elements = other.flatMap(block => block.toScalaRange)
-      ranges2Elements.forall { e => ranges1Elements.contains(e) }
-    }
+    private def containsEveryElementOf(other: SeatBlocks): Boolean =
+      other.flatMap(_.toSet).toSet.subsetOf(seatBlocks.flatMap(_.toSet).toSet)
 
 }
 
@@ -119,10 +115,10 @@ case class Row private(id: Int, name: String, seatCount: Int, bookedSeats: SeatB
 
   val midPoint: Float = (seatCount + 1).toFloat / 2
 
-  val availableSeats: SeatBlocks = SeatBlocks(Seq(Range.of(1, seatCount))) -- bookedSeats
+  val availableSeats: SeatBlocks = SeatBlocks(Seq(Range.inclusive(1, seatCount))) -- bookedSeats
 
   def assignSeats(seatBlocks: SeatBlocks): Row = {
-    require(!isOverlapping((bookedSeats ++ seatBlocks).toSeq),
+    require(!isOverlapping(bookedSeats ++ seatBlocks),
       s"Seats to be booked ($seatBlocks) cannot overlap with seats that are already booked ($bookedSeats).")
     this.copy(bookedSeats = bookedSeats ++ seatBlocks)
   }

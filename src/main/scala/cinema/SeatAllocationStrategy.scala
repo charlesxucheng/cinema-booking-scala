@@ -2,11 +2,10 @@ package cinema
 
 import cinema.Row.*
 import cinema.SeatAllocationStrategy.*
-import org.apache.commons.lang3.Range
 
 import scala.+:
 import scala.annotation.tailrec
-import scala.collection.mutable
+import scala.collection.immutable.Range
 
 
 object SeatAllocationStrategy {
@@ -85,9 +84,9 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
       case x +: xs =>
         val result = allocateSeatsFromSeatBlock(x._1, refPoint, x._2, numberOfSeatsRequested)
         if (result.numberOfSeatsToAllocate == 0)
-          SingleRowAllocationResult(allocatedSeatBlocks +: result.allocatedSeatBlock, 0)
+          SingleRowAllocationResult(allocatedSeatBlocks :+ result.allocatedSeatBlock, 0)
         else
-          allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks +: result._1, result._2, refPoint)
+          allocateSeatsFromSeatBlocksOfRow(xs, allocatedSeatBlocks :+ result._1, result._2, refPoint)
     }
   }
 
@@ -117,22 +116,22 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
     else {
       val allocatedBlock = position match {
         case LEFT =>
-          Range.of(seatBlock.getMaximum - numberOfSeatsRequested + 1, seatBlock.getMaximum)
+          Range.inclusive(seatBlock.end - numberOfSeatsRequested + 1, seatBlock.end)
         case RIGHT =>
-          Range.of(seatBlock.getMinimum, seatBlock.getMinimum + numberOfSeatsRequested - 1)
+          Range.inclusive(seatBlock.start, seatBlock.start + numberOfSeatsRequested - 1)
         case COVERS =>
           val endPoint = deriveEndPoint(refPoint, numberOfSeatsRequested)
           val startPoint = endPoint - numberOfSeatsRequested + 1
-          val blockCenteredAtRefPoint = Range.of(startPoint, endPoint)
+          val blockCenteredAtRefPoint = Range.inclusive(startPoint, endPoint)
 
           val offset =
-            if (blockCenteredAtRefPoint.getMinimum < seatBlock.getMinimum)
-              seatBlock.getMinimum - blockCenteredAtRefPoint.getMinimum
-            else if (blockCenteredAtRefPoint.getMaximum > seatBlock.getMaximum)
-              blockCenteredAtRefPoint.getMaximum - seatBlock.getMaximum
+            if (blockCenteredAtRefPoint.start < seatBlock.start)
+              seatBlock.start - blockCenteredAtRefPoint.start
+            else if (blockCenteredAtRefPoint.end > seatBlock.end)
+              blockCenteredAtRefPoint.end - seatBlock.end
             else 0
 
-          Range.of(blockCenteredAtRefPoint.getMinimum + offset, blockCenteredAtRefPoint.getMaximum + offset)
+          Range.inclusive(blockCenteredAtRefPoint.start + offset, blockCenteredAtRefPoint.end + offset)
       }
       SingleBlockAllocationResult(allocatedBlock, 0)
     }
@@ -140,7 +139,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
 
   private def sortSeatBlocksByDistanceToRefPoint(row: Row, refPoint: Float): Seq[(SeatBlock, PositionToRefPoint, Float)] =
     assert(row.seatCount > 0)
-    row.availableSeats.toSeq
+    row.availableSeats
       .map(seatBlock => {
         val relativePosition = positionToRefPoint(seatBlock, refPoint)
         val distanceToMidPoint = distanceToRefPoint(seatBlock, relativePosition, refPoint)
@@ -151,14 +150,14 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   private def distanceToRefPoint(seatBlock: SeatBlock, relativePosition: PositionToRefPoint, refPoint: Float) = {
     relativePosition match {
       case COVERS => 0
-      case LEFT => refPoint - seatBlock.getMaximum
-      case RIGHT => seatBlock.getMinimum - refPoint
+      case LEFT => refPoint - seatBlock.end
+      case RIGHT => seatBlock.start - refPoint
     }
   }
 
   private def positionToRefPoint(seatBlock: SeatBlock, refPoint: Float) =
-    if (seatBlock.getMaximum < refPoint) LEFT
-    else if (seatBlock.getMinimum > refPoint) RIGHT
+    if (seatBlock.end < refPoint) LEFT
+    else if (seatBlock.start > refPoint) RIGHT
     else COVERS
 
   private enum PositionToRefPoint {

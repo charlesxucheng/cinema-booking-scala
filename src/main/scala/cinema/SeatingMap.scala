@@ -7,9 +7,9 @@ object SeatingMap {
   private def convertToStringValues(m: SeatingMap): Seq[String] = {
     m.seats.map(r => {
       val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats.map((false, _))
-        .sortBy(x => x._2.getMinimum)
+        .sortBy(x => x._2.start)
       val symbols = allSeats
-        .sortBy(x => x._2.getMinimum)
+        .sortBy(x => x._2.start)
         .map(b => if (b._1) " x" * b._2.size else " o" * b._2.size)
 
       symbols.foldLeft(r.id.toString)(_ + _)
@@ -66,7 +66,7 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row]) e
   require(seats.size == rows && seats.forall(_.seatCount == cols),
     s"Seats provided must have exactly $rows rows and $cols columns.")
 
-  override val availableRows: IndexedSeq[Row] = seats.filter(row => row.availableSeats.toSeq.nonEmpty).reverse
+  override val availableRows: IndexedSeq[Row] = seats.filter(row => row.availableSeats.nonEmpty).reverse
 
   override def capacity: Int = rows * cols
 
