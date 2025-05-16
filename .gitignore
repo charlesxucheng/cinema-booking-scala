@@ -85,3 +85,7 @@ target/
 
 .bsp/
 .idea/.name
+.idea/CopilotChatHistory.xml
+.idea/CopilotSideBarWebPersist.xml
+.idea/CopilotWebChatHistory.xml
+.idea/git_toolbox_prj.xml
