@@ -7,7 +7,7 @@ import cinema.ui.base.UserInteraction.Result
 
 import java.time.LocalTime
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.DurationInt
 
 case object SetMovieAndShowTimes extends UserInteraction[AppState] {
   override def getPrompt: String =
@@ -16,26 +16,30 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
   override def handleInput(
       input: String
   ): State[AppState, UserInteraction.Result[AppState]] = State { currentState =>
-    {
-      input.trim match {
-        case "" => (currentState, Result("", MainMenu))
-        case _ =>
-          parseInput(input) match {
-            case Right(movie) =>
-              val updatedState = currentState.copy(movie = Some(movie))
-              (updatedState, Result("", MainMenu))
-            case Left(errorMessage) =>
-              (
-                currentState,
-                Result(
-                  s"""Invalid input format. Please use: [Title] [DurationInMinutes] [HH:MM] [HH:MM] ...
+    input.trim match {
+      case "" => (currentState, Result("", MainMenu))
+      case _ =>
+        parseInput(input) match {
+          case Right(movie) =>
+            val updatedState = currentState.copy(movie = Some(movie))
+            (
+              updatedState,
+              Result(
+                s"Movie (${movie.title}, ${movie.duration}, show times: ${movie.showTimes.mkString(", ")}) has been set.",
+                MainMenu
+              )
+            )
+          case Left(errorMessage) =>
+            (
+              currentState,
+              Result(
+                s"""Invalid input format. Please use: [Title] [DurationInMinutes] [HH:MM] [HH:MM] ...
                     |Specific error: $errorMessage
                     |""".stripMargin,
-                  this
-                )
+                this
               )
-          }
-      }
+            )
+        }
     }
   }
 

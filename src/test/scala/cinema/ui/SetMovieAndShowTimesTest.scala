@@ -44,7 +44,7 @@ class SetMovieAndShowTimesTest extends UnitSpec {
           Seq(LocalTime.of(12, 30)))
       )
 
-      "parse and create a movie with show times" in {
+      "capture the movie info and return to main menu" in {
         forAll(validInputs) {
           (input, expectedTitle, expectedDuration, expectedTimes) =>
             val initialState = AppState.empty
@@ -54,10 +54,12 @@ class SetMovieAndShowTimesTest extends UnitSpec {
               .value
 
             val movie = newState.movie.get
-            movie.title shouldBe expectedTitle
-            movie.duration shouldBe expectedDuration.minutes
-            movie.showTimes should contain theSameElementsAs expectedTimes
-            result.outputMessage shouldBe ""
+            movie should have (
+              Symbol("title") (expectedTitle),
+              Symbol("duration") (expectedDuration.minutes),
+              Symbol("showTimes") (expectedTimes)
+            )
+            result.outputMessage should include regex """Movie \(.+\) has been set."""
             result.interaction.value shouldBe MainMenu
         }
       }
@@ -85,7 +87,7 @@ class SetMovieAndShowTimesTest extends UnitSpec {
             .value
 
           newState shouldBe initialState
-          result.outputMessage should include("Invalid input format. Please use:")
+          result.outputMessage should include ("Invalid input format. Please use:")
           result.interaction.value shouldBe SetMovieAndShowTimes
         }
       }
