@@ -10,13 +10,51 @@ class SeatingMapTest extends UnitSpec {
     "have a capacity that is equal to its number of rows times number of columns" in {
       RectangularSeatingMap(5, 5).capacity shouldBe 25
     }
+
+    "not allow negative or zero number of rows or columns" in {
+      val testData = Table(
+        ("rows", "cols"),
+        (-1, 5),
+        (0, 5),
+        (5, -1),
+        (5, 0),
+        (-4, 10),
+        (10, -4),
+        (Int.MinValue, Int.MinValue),
+        (0, 0)
+      )
+      forAll(testData) { (rows: Int, cols: Int) =>
+        an[IllegalArgumentException] should be thrownBy RectangularSeatingMap(rows, cols)
+      }
+    }
+
+    "not allow rows or columns that exceed the maximum" in {
+      val testData = Table(
+        ("rows", "cols"),
+        (RectangularSeatingMap.maxRows + 1, 5),
+        (5, RectangularSeatingMap.maxCols + 1)
+      )
+      forAll(testData) { (rows: Int, cols: Int) =>
+        an[IllegalArgumentException] should be thrownBy RectangularSeatingMap(rows, cols)
+      }
+    }
   }
 
   it when {
     "created" should {
       "have all seats available" in {
-        val seatingMap = RectangularSeatingMap(6, 10)
-        seatingMap.capacity shouldBe seatingMap.availableSeatCount
+        val tableData = Table(
+          ("rows", "cols"),
+          (5, 5),
+          (5, 10),
+          (10, 5),
+          (6, 10),
+          (RectangularSeatingMap.maxRows, RectangularSeatingMap.maxCols)
+        )
+        forAll(tableData) { (rows: Int, cols: Int) =>
+          val seatingMap = RectangularSeatingMap(rows, cols)
+          seatingMap.availableSeatCount shouldBe seatingMap.capacity
+        }
       }
     }
   }
