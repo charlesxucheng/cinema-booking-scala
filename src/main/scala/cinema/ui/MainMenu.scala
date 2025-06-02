@@ -16,6 +16,7 @@ case object MainMenu extends UserInteraction[AppState] {
     currentState => {
       input.trim match {
         case "1" => (currentState, Result("", SetMovieAndShowTimes))
+        case "4" => (currentState, Result("", CinemaExit))
         case _ => (currentState, Result(invalidInputMessage(input), MainMenu))
       }
     }
