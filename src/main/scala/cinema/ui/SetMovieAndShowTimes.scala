@@ -2,7 +2,7 @@ package cinema.ui
 
 import cats.data.State
 import cinema.Movie
-import cinema.ui.base.UserInteraction
+import cinema.ui.base.{LS, UserInteraction}
 import cinema.ui.base.UserInteraction.Result
 
 import java.time.LocalTime
@@ -25,7 +25,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
             (
               updatedState,
               Result(
-                s"Movie (${movie.title}, ${movie.duration}, show times: ${movie.showTimes.mkString(", ")}) has been set.",
+                s"Movie (${movie.title}, ${movie.duration}, show times: ${movie.showTimes.mkString(", ")}) has been set.$LS",
                 MainMenu
               )
             )

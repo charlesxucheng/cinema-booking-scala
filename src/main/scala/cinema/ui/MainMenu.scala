@@ -1,7 +1,7 @@
 package cinema.ui
 
 import cats.data.State
-import cinema.ui.base.UserInteraction
+import cinema.ui.base.{LS, UserInteraction}
 import cinema.ui.base.UserInteraction.{Input, Result}
 
 case object MainMenu extends UserInteraction[AppState] {
@@ -20,7 +20,8 @@ case object MainMenu extends UserInteraction[AppState] {
         case "1" => (currentState, Result("", SetMovieAndShowTimes))
         case "2" => (currentState, Result("", DefineSeatingMap))
         case "4" => (currentState, Result("", CinemaExit))
-        case _   => (currentState, Result(invalidInputMessage(input), MainMenu))
+        case _ =>
+          (currentState, Result(invalidInputMessage(input) + LS, MainMenu))
       }
     }
 

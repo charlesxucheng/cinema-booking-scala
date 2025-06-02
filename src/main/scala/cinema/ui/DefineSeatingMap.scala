@@ -1,7 +1,7 @@
 package cinema.ui
 
 import cats.data.State
-import cinema.ui.base.UserInteraction
+import cinema.ui.base.{LS, UserInteraction}
 import cinema.ui.base.UserInteraction.{Input, Result}
 import cinema.{MovieTheatre, RectangularSeatingMap}
 
@@ -22,7 +22,7 @@ case object DefineSeatingMap extends UserInteraction[AppState] {
             (
               updatedState,
               Result(
-                s"A ${theatre.seatingPlan.capacity}-seat seating map has been defined.",
+                s"A ${theatre.seatingPlan.capacity}-seat seating map has been defined.$LS",
                 MainMenu
               )
             )
