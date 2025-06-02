@@ -7,17 +7,20 @@ import cinema.ui.base.UserInteraction.{Input, Result}
 case object MainMenu extends UserInteraction[AppState] {
   override def getPrompt: String =
     """[1] Set movie & show times
-      |[2] Display seating map
+      |[2] Define seating map
       |[3] Book tickets
       |[4] Exit
       |""".stripMargin
 
-  override def handleInput(input: Input): State[AppState, UserInteraction.Result[AppState]] = State {
-    currentState => {
+  override def handleInput(
+      input: Input
+  ): State[AppState, UserInteraction.Result[AppState]] = State { currentState =>
+    {
       input.trim match {
         case "1" => (currentState, Result("", SetMovieAndShowTimes))
+        case "2" => (currentState, Result("", DefineSeatingMap))
         case "4" => (currentState, Result("", CinemaExit))
-        case _ => (currentState, Result(invalidInputMessage(input), MainMenu))
+        case _   => (currentState, Result(invalidInputMessage(input), MainMenu))
       }
     }
 
