@@ -21,7 +21,7 @@ case object MainMenu extends UserInteraction[AppState] {
         case "2" => (currentState, Result("", DefineSeatingMap))
         case "4" => (currentState, Result("", CinemaExit))
         case _ =>
-          (currentState, Result(invalidInputMessage(input) + LS, MainMenu))
+          (currentState, Result(invalidInputMessage(input), MainMenu))
       }
     }
 

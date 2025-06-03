@@ -28,5 +28,5 @@ trait UserInteraction[S] {
   def getPrompt: String
   def handleInput(input: Input): State[S, Result[S]]
   def invalidInputMessage(input: Input) =
-    s"Input \"$input\" is invalid."
+    s"Input \"$input\" is invalid.$LS"
 }
