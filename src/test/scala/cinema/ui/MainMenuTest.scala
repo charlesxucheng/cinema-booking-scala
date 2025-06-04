@@ -1,6 +1,6 @@
 package cinema.ui
 
-import cinema.{Movie, UnitSpec}
+import cinema.{Movie, MovieTheatre, RectangularSeatingMap, UnitSpec}
 import org.scalatest.matchers.should.Matchers.*
 
 import java.time.LocalTime
@@ -18,13 +18,14 @@ class MainMenuTest extends UnitSpec {
       )
       "go to the SetMovieAndShowTimes user interaction with an empty app state" in {
         val initialAppState = AppState.empty
-         forAll(inputs) { input =>
-           val result = MainMenu.handleInput(input)
-             .run(initialAppState)
-             .value
-           result._1 shouldBe initialAppState
-           result._2.interaction.value shouldBe SetMovieAndShowTimes
-         }
+        forAll(inputs) { input =>
+          val result = MainMenu
+            .handleInput(input)
+            .run(initialAppState)
+            .value
+          result._1 shouldBe initialAppState
+          result._2.interaction.value shouldBe SetMovieAndShowTimes
+        }
       }
     }
 
@@ -38,13 +39,41 @@ class MainMenuTest extends UnitSpec {
       )
 
       "go to the DefineSeatingMap user interaction" in {
-        val initialAppState = AppState(Some(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30))), None)
+        val initialAppState = AppState(
+          Some(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30))),
+          None
+        )
         forAll(inputs) { input =>
-          val result = MainMenu.handleInput(input)
+          val result = MainMenu
+            .handleInput(input)
             .run(initialAppState)
             .value
           result._1 shouldBe initialAppState
           result._2.interaction.value shouldBe DefineSeatingMap
+        }
+      }
+    }
+
+    "\"[3] Book tickets\" is selected by user" should {
+      val inputs = Table(
+        "input",
+        "3",
+        " 3",
+        "3 ",
+        " 3  "
+      )
+      "go to the BookTickets user interaction" in {
+        val initialAppState = AppState(
+          Some(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30))),
+          Some(MovieTheatre(RectangularSeatingMap(10, 10)))
+        )
+        forAll(inputs) { input =>
+          val result = MainMenu
+            .handleInput(input)
+            .run(initialAppState)
+            .value
+          result._1 shouldBe initialAppState
+          result._2.interaction.value shouldBe BookTickets
         }
       }
     }
@@ -59,13 +88,14 @@ class MainMenuTest extends UnitSpec {
       )
       "exit the application" in {
         val initialAppState = AppState.empty
-         forAll(inputs) { input =>
-           val result = MainMenu.handleInput(input)
-             .run(initialAppState)
-             .value
-           result._1 shouldBe initialAppState
-           result._2.interaction.left.value shouldBe CinemaExit
-         }
+        forAll(inputs) { input =>
+          val result = MainMenu
+            .handleInput(input)
+            .run(initialAppState)
+            .value
+          result._1 shouldBe initialAppState
+          result._2.interaction.left.value shouldBe CinemaExit
+        }
       }
     }
 
@@ -83,23 +113,25 @@ class MainMenuTest extends UnitSpec {
 
       "display an error message" in {
         val initialAppState = AppState.empty
-         forAll(inputs) { input =>
-           val result = MainMenu.handleInput(input)
-             .run(initialAppState)
-             .value
-           result._2.outputMessage shouldBe MainMenu.invalidInputMessage(input)
-         }
+        forAll(inputs) { input =>
+          val result = MainMenu
+            .handleInput(input)
+            .run(initialAppState)
+            .value
+          result._2.outputMessage shouldBe MainMenu.invalidInputMessage(input)
+        }
       }
 
       "repeat the same interaction with an empty app state" in {
         val initialAppState = AppState.empty
-         forAll(inputs) { input =>
-           val result = MainMenu.handleInput(input)
-             .run(initialAppState)
-             .value
-           result._1 shouldBe initialAppState
-           result._2.interaction.value shouldBe MainMenu
-         }
+        forAll(inputs) { input =>
+          val result = MainMenu
+            .handleInput(input)
+            .run(initialAppState)
+            .value
+          result._1 shouldBe initialAppState
+          result._2.interaction.value shouldBe MainMenu
+        }
       }
     }
   }

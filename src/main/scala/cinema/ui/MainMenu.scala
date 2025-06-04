@@ -10,6 +10,7 @@ case object MainMenu extends UserInteraction[AppState] {
       |[2] Define seating map
       |[3] Book tickets
       |[4] Exit
+      |Please enter your selection:"
       |""".stripMargin
 
   override def handleInput(
@@ -19,6 +20,7 @@ case object MainMenu extends UserInteraction[AppState] {
       input.trim match {
         case "1" => (currentState, Result("", SetMovieAndShowTimes))
         case "2" => (currentState, Result("", DefineSeatingMap))
+        case "3" => (currentState, Result("", BookTickets))
         case "4" => (currentState, Result("", CinemaExit))
         case _ =>
           (currentState, Result(invalidInputMessage(input), MainMenu))
