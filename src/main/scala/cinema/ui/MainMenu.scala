@@ -5,14 +5,42 @@ import cinema.ui.base.{LS, UserInteraction}
 import cinema.ui.base.UserInteraction.{Input, Result}
 
 case object MainMenu extends UserInteraction[AppState] {
-  override def getPrompt: String =
-    """[1] Set movie & show times
-      |[2] Define seating map
-      |[3] Book tickets
-      |[4] Exit
-      |Please enter your selection:"
-      |""".stripMargin
 
+  private case class MenuOption(
+      description: String,
+      result: Result[AppState]
+  )
+
+  private val menuOptions: Map[String, MenuOption] = Map(
+    "1" -> MenuOption(
+      "[1] Set movie & show times",
+      Result("", SetMovieAndShowTimes)
+    ),
+    "2" -> MenuOption("[2] Define seating map", Result("", DefineSeatingMap)),
+    "3" -> MenuOption("[3] Book tickets", Result("", BookTickets)),
+    "4" -> MenuOption("[4] Exit", Result("", CinemaExit))
+  )
+
+  override def getPrompt: String = getPrompt(AppState(None, None))
+
+  override def getPrompt(state: AppState): String = {
+
+    val firstOptionDynamicMessage = menuOptions("1").description +
+      state.movie
+        .map(movie =>
+          s" (${movie.title}, ${movie.duration}, ${movie.showTimes.size} show times)"
+        )
+        .getOrElse("")
+
+    val secondOptionDynamicMessage = menuOptions("2").description +
+      state.theatre.map(theatre => s" (${theatre.capacity} seats)").getOrElse("")
+
+    s"""$firstOptionDynamicMessage
+       |$secondOptionDynamicMessage
+       |[3] Book tickets
+       |[4] Exit
+       |Please enter your selection:""".stripMargin
+  }
   override def handleInput(
       input: Input
   ): State[AppState, UserInteraction.Result[AppState]] = State { currentState =>

@@ -26,6 +26,7 @@ object UserInteraction {
 // User interaction that carries application state S
 trait UserInteraction[S] {
   def getPrompt: String
+  def getPrompt(state: S): String = getPrompt
   def handleInput(input: Input): State[S, Result[S]]
   def invalidInputMessage(input: Input) =
     s"Input \"$input\" is invalid.$LS"

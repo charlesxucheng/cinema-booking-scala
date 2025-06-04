@@ -134,5 +134,25 @@ class MainMenuTest extends UnitSpec {
         }
       }
     }
+
+    "movie info has been set" should {
+      "display the movie info in the menu option of the prompt" in {
+        val state = AppState(
+          Some(Movie.create("TestMovie", 120.minutes, Seq(LocalTime.of(14, 30), LocalTime.of(18, 50)))),
+          None
+        )
+        MainMenu.getPrompt(state) should include ("(TestMovie, 120 minutes, 2 show times)")
+      }
+    }
+
+    "movie theatre info has been set" should {
+      "display the movie theatre info in the menu option of the prompt" in {
+        val state = AppState(
+          None,
+          Some(MovieTheatre(RectangularSeatingMap(10, 10)))
+        )
+        MainMenu.getPrompt(state) should include ("(100 seats)")
+      }
+    }
   }
 }

@@ -34,7 +34,8 @@ trait ConsoleUI[S](console: Console[IO]) {
       interaction: UserInteraction[S]
   ): StateT[IO, S, NextInteraction[S]] = {
     for {
-      _ <- StateT.liftF(console.println(interaction.getPrompt))
+      currentState <- StateT.get[IO, S]
+      _ <- StateT.liftF(console.println(interaction.getPrompt(currentState)))
       input <- StateT.liftF(console.readLine)
       result <- StateT { (currentState: S) =>
         val (s, a) = interaction.handleInput(input).run(currentState).value
