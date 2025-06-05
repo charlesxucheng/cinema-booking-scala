@@ -1,9 +1,10 @@
-package cinema.ui
+package cinema.ui.interactions
 
 import cats.data.State
 import cinema.Movie
-import cinema.ui.base.{LS, UserInteraction}
+import cinema.ui.AppState
 import cinema.ui.base.UserInteraction.Result
+import cinema.ui.base.{LS, UserInteraction}
 
 import java.time.LocalTime
 import java.time.format.{DateTimeFormatter, DateTimeParseException}

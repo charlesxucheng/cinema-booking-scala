@@ -1,5 +1,12 @@
-package cinema.ui
+package cinema.ui.interactions
 
+import cinema.ui.interactions.{
+  BookTickets,
+  DefineSeatingMap,
+  MainMenu,
+  SetMovieAndShowTimes
+}
+import cinema.ui.{AppState, CinemaExit}
 import cinema.{Movie, MovieTheatre, RectangularSeatingMap, UnitSpec}
 import org.scalatest.matchers.should.Matchers.*
 

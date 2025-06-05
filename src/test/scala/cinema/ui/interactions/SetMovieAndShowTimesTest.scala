@@ -1,6 +1,8 @@
-package cinema.ui
+package cinema.ui.interactions
 
 import cinema.UnitSpec
+import cinema.ui.AppState
+import cinema.ui.interactions.{MainMenu, SetMovieAndShowTimes}
 import org.scalatest.matchers.should.Matchers.*
 
 import java.time.LocalTime

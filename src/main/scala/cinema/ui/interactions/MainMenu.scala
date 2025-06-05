@@ -1,8 +1,9 @@
-package cinema.ui
+package cinema.ui.interactions
 
 import cats.data.State
-import cinema.ui.base.{LS, UserInteraction}
 import cinema.ui.base.UserInteraction.{Input, Result}
+import cinema.ui.base.{LS, UserInteraction}
+import cinema.ui.{AppState, CinemaExit}
 
 case object MainMenu extends UserInteraction[AppState] {
 

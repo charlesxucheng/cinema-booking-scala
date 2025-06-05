@@ -1,5 +1,7 @@
-package cinema.ui
+package cinema.ui.interactions
 
+import cinema.ui.AppState
+import cinema.ui.interactions.{DefineSeatingMap, MainMenu, SetMovieAndShowTimes}
 import cinema.{RectangularSeatingMap, UnitSpec}
 import org.scalatest.matchers.should.Matchers.*
 
