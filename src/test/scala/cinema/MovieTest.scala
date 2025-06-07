@@ -74,7 +74,7 @@ class MovieTest extends UnitSpec {
       )
     }
 
-    s"allow show times that have at least ${MovieTheatre.minIntermission} in between" in {
+    s"allow show times that have at least ${CinemaHall.MIN_INTERMISSION_DURATION} in between" in {
       val testData = Table(
         ("Duration", "ShowTimes"),
         (210.minutes, Seq(LocalTime.of(10, 0), LocalTime.of(14, 0))),
@@ -102,7 +102,7 @@ class MovieTest extends UnitSpec {
       }
     }
 
-    s"not allow show times that are too close to each other (< ${MovieTheatre.minIntermission} )" in {
+    s"not allow show times that are too close to each other (< ${CinemaHall.MIN_INTERMISSION_DURATION} )" in {
       val testData = Table(
         ("Duration", "ShowTimes"),
         (200.minutes, Seq(LocalTime.of(10, 0), LocalTime.of(12, 0))),

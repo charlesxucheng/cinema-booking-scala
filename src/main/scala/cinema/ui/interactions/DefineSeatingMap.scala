@@ -4,7 +4,7 @@ import cats.data.State
 import cinema.ui.base.UserInteraction.{Input, Result}
 import cinema.ui.base.{LS, UserInteraction}
 import cinema.ui.AppState
-import cinema.{MovieTheatre, RectangularSeatingMap}
+import cinema.{CinemaHall, RectangularSeatingMap}
 
 case object DefineSeatingMap extends UserInteraction[AppState] {
   override def getPrompt: String =
@@ -41,14 +41,14 @@ case object DefineSeatingMap extends UserInteraction[AppState] {
     }
   }
 
-  private def parseInput(input: String): Either[String, MovieTheatre] = {
+  private def parseInput(input: String): Either[String, CinemaHall] = {
     val splitInput = input.trim.split(" ").map(_.trim)
     if (splitInput.length != 2)
       Left("Need two numbers to define a seating map.")
     else
       try {
         Right(
-          MovieTheatre(
+          CinemaHall(
             RectangularSeatingMap(splitInput(0).toInt, splitInput(1).toInt)
           )
         )

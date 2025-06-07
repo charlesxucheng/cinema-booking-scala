@@ -30,6 +30,9 @@ object MovieDurations {
 
     given durationToMovieDuration: Conversion[Duration, MovieDuration] with
       def apply(d: Duration): MovieDuration = MovieDuration(d)
+      
+    given movieDurationToDuration: Conversion[MovieDuration, Duration] with
+      def apply(md: MovieDuration): Duration = md
   }
 }
 
@@ -56,7 +59,7 @@ case class Movie private (
   require(title.trim.nonEmpty, "Movie title must not be empty")
   require(
     showTimesValid(),
-    s"Show times $showTimes must not be empty and there must be at least ${MovieTheatre.minIntermission} between two shows"
+    s"Show times $showTimes must not be empty and there must be at least ${CinemaHall.MIN_INTERMISSION_DURATION} between two shows"
   )
 
   private def showTimesValid(): Boolean =
@@ -75,7 +78,7 @@ case class Movie private (
     val earliestStartTimesAllowed = sortedShowTimes
       .map(
         _.plus(duration.toJavaTemporalAmount).plus(
-          MovieTheatre.minIntermission.toJavaTemporalAmount
+          CinemaHall.MIN_INTERMISSION_DURATION.toJavaTemporalAmount
         )
       )
 
