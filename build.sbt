@@ -13,4 +13,5 @@ libraryDependencies ++= Seq("org.scalactic" %% "scalactic" % "3.2.19",
   "org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % "test",
   "org.typelevel" %% "cats-core" % "2.13.0",
   "org.typelevel" %% "cats-effect" % "3.6.1",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
 )

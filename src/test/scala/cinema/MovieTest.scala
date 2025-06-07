@@ -64,6 +64,7 @@ class MovieTest extends UnitSpec {
         LocalTime.of(9, 30)
       ) shouldBe a[Movie]
       Movie("Top Gun", 159.minutes, LocalTime.of(0, 0)) shouldBe a[Movie]
+      Movie("ABC", 120.minutes, LocalTime.of(9, 30)) shouldBe a[Movie]
     }
 
     "not allow empty show times" in {

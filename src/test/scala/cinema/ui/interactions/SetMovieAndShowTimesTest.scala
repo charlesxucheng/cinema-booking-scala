@@ -27,7 +27,7 @@ class SetMovieAndShowTimesTest extends UnitSpec {
     "valid input is provided" should {
       val validInputs = Table(
         ("input", "expectedTitle", "expectedDuration", "expectedShowTimes"),
-        ("TestMovie 120 12:30", "TestMovie", 120, Seq(LocalTime.of(12, 30))),
+        ("TestMovie 120 9:30", "TestMovie", 120, Seq(LocalTime.of(9, 30))),
         (
           "Test Movie 2 90 10:00 14:30",
           "Test Movie 2",
@@ -40,10 +40,18 @@ class SetMovieAndShowTimesTest extends UnitSpec {
           150,
           Seq(LocalTime.of(15, 45), LocalTime.of(19, 0), LocalTime.of(22, 15))
         ),
-        (" Test Movie  with   Spaces    120  12:30  ",
+        (
+          " Test Movie  with   Spaces    120  12:30  ",
           "Test Movie with Spaces",
           120,
-          Seq(LocalTime.of(12, 30)))
+          Seq(LocalTime.of(12, 30))
+        ),
+        (
+          "Test Movie 30 1:05 2:05 3:05",
+          "Test Movie",
+          30,
+          Seq(LocalTime.of(1, 5), LocalTime.of(2, 5), LocalTime.of(3, 5))
+        )
       )
 
       "capture the movie info and return to main menu" in {
@@ -56,10 +64,10 @@ class SetMovieAndShowTimesTest extends UnitSpec {
               .value
 
             val movie = newState.movie.get
-            movie should have (
-              Symbol("title") (expectedTitle),
-              Symbol("duration") (expectedDuration.minutes),
-              Symbol("showTimes") (expectedTimes)
+            movie should have(
+              Symbol("title")(expectedTitle),
+              Symbol("duration")(expectedDuration.minutes),
+              Symbol("showTimes")(expectedTimes)
             )
             result.outputMessage should include regex """Movie \(.+\) has been set."""
             result.interaction.value shouldBe MainMenu
@@ -89,7 +97,9 @@ class SetMovieAndShowTimesTest extends UnitSpec {
             .value
 
           newState shouldBe initialState
-          result.outputMessage should include ("Invalid input format. Please use:")
+          result.outputMessage should include(
+            "Invalid input format. Please use:"
+          )
           result.interaction.value shouldBe SetMovieAndShowTimes
         }
       }

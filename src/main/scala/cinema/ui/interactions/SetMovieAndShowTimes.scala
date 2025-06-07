@@ -5,12 +5,15 @@ import cinema.Movie
 import cinema.ui.AppState
 import cinema.ui.base.UserInteraction.Result
 import cinema.ui.base.{LS, UserInteraction}
+import com.typesafe.scalalogging.Logger
 
 import java.time.LocalTime
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import scala.concurrent.duration.DurationInt
 
 case object SetMovieAndShowTimes extends UserInteraction[AppState] {
+  private val logger = Logger(getClass)
+
   override def getPrompt: String =
     "Set movie in [Title] [Duration] [Showtime.1(hh:mm)] ... [Showtime.n] format, or press Enter to return to main menu:"
 
@@ -34,7 +37,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
             (
               currentState,
               Result(
-                s"""Invalid input format. Please use: [Title] [DurationInMinutes] [HH:MM] [HH:MM] ...
+                s"""Invalid input format. Please use: [Title] [DurationInMinutes] [H:MM] [H:MM] ...
                     |Specific error: $errorMessage
                     |""".stripMargin,
                 this
@@ -54,7 +57,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
       try {
         val movieTitle = tokens.take(durationIndex).mkString(" ").trim
         val movieDuration = tokens(durationIndex).toInt.minutes
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        val timeFormatter =  DateTimeFormatter.ofPattern("H:mm")
 
         val showTimes = tokens
           .drop(durationIndex + 1)
@@ -62,7 +65,9 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
             try {
               Some(LocalTime.parse(timeStr, timeFormatter))
             } catch {
-              case _: DateTimeParseException => None
+              case _: DateTimeParseException =>
+                logger.warn(s"Invalid time format: $timeStr")
+                None
             }
           }
           .toList
