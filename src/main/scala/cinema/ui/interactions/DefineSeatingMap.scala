@@ -17,13 +17,13 @@ case object DefineSeatingMap extends UserInteraction[AppState] {
       case "" => (currentState, Result("", MainMenu))
       case _ =>
         parseInput(input) match {
-          case Right(theatre) =>
+          case Right(cinemaHall) =>
             val updatedState =
-              currentState.copy(theatre = Some(theatre))
+              currentState.copy(cinemaHall = Some(cinemaHall))
             (
               updatedState,
               Result(
-                s"A ${theatre.seatingPlan.capacity}-seat seating map has been defined.$LS",
+                s"A ${cinemaHall.seatingPlan.capacity}-seat seating map has been defined.$LS",
                 MainMenu
               )
             )

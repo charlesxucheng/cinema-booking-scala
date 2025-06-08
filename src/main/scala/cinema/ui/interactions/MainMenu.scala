@@ -34,7 +34,7 @@ case object MainMenu extends UserInteraction[AppState] {
         .getOrElse("")
 
     val secondOptionDynamicMessage = menuOptions("2").description +
-      state.theatre.map(theatre => s" (${theatre.capacity} seats)").getOrElse("")
+      state.cinemaHall.map(hall => s" (${hall.capacity} seats)").getOrElse("")
 
     s"""$firstOptionDynamicMessage
        |$secondOptionDynamicMessage
