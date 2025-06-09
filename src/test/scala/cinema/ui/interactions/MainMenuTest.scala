@@ -7,7 +7,7 @@ import cinema.ui.interactions.{
   SetMovieAndShowTimes
 }
 import cinema.ui.{AppState, CinemaExit}
-import cinema.{Movie, CinemaHall, RectangularSeatingMap, UnitSpec}
+import cinema.{CinemaHall, Movie, RectangularSeatingMap, UnitSpec}
 import org.scalatest.matchers.should.Matchers.*
 
 import java.time.LocalTime
@@ -46,10 +46,8 @@ class MainMenuTest extends UnitSpec {
       )
 
       "go to the DefineSeatingMap user interaction" in {
-        val initialAppState = AppState(
-          Some(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30))),
-          None
-        )
+        val initialAppState = AppState.empty
+          .setMovie(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30)))
         forAll(inputs) { input =>
           val result = MainMenu
             .handleInput(input)
@@ -70,10 +68,9 @@ class MainMenuTest extends UnitSpec {
         " 3  "
       )
       "go to the BookTickets user interaction" in {
-        val initialAppState = AppState(
-          Some(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30))),
-          Some(CinemaHall(RectangularSeatingMap(10, 10)))
-        )
+        val initialAppState = AppState.empty
+          .setMovie(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30)))
+          .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
         forAll(inputs) { input =>
           val result = MainMenu
             .handleInput(input)
@@ -144,21 +141,25 @@ class MainMenuTest extends UnitSpec {
 
     "movie info has been set" should {
       "display the movie info in the menu option of the prompt" in {
-        val state = AppState(
-          Some(Movie.create("TestMovie", 120.minutes, Seq(LocalTime.of(14, 30), LocalTime.of(18, 50)))),
-          None
+        val state = AppState.empty
+          .setMovie(
+            Movie.create(
+              "TestMovie",
+              120.minutes,
+              Seq(LocalTime.of(14, 30), LocalTime.of(18, 50))
+            )
+          )
+        MainMenu.getPrompt(state) should include(
+          "(TestMovie, 120 minutes, 2 show times)"
         )
-        MainMenu.getPrompt(state) should include ("(TestMovie, 120 minutes, 2 show times)")
       }
     }
 
     "movie theatre info has been set" should {
       "display the movie theatre info in the menu option of the prompt" in {
-        val state = AppState(
-          None,
-          Some(CinemaHall(RectangularSeatingMap(10, 10)))
-        )
-        MainMenu.getPrompt(state) should include ("(100 seats)")
+        val state = AppState.empty
+          .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
+        MainMenu.getPrompt(state) should include("(100 seats)")
       }
     }
   }

@@ -26,4 +26,6 @@ case class CinemaHall private (
   )
 
   def capacity: Int = seatingPlan.capacity
+  
+  def duplicate: CinemaHall = this.copy()
 }

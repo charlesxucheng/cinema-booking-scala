@@ -18,8 +18,7 @@ case object DefineSeatingMap extends UserInteraction[AppState] {
       case _ =>
         parseInput(input) match {
           case Right(cinemaHall) =>
-            val updatedState =
-              currentState.copy(cinemaHall = Some(cinemaHall))
+            val updatedState = currentState.setCinemaHall(cinemaHall)
             (
               updatedState,
               Result(

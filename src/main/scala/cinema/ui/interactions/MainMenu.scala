@@ -22,7 +22,7 @@ case object MainMenu extends UserInteraction[AppState] {
     "4" -> MenuOption("[4] Exit", Result("", CinemaExit))
   )
 
-  override def getPrompt: String = getPrompt(AppState(None, None))
+  override def getPrompt: String = getPrompt(AppState.empty)
 
   override def getPrompt(state: AppState): String = {
 

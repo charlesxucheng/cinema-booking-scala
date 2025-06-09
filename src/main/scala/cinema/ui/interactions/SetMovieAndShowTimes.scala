@@ -25,7 +25,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
       case _ =>
         parseInput(input) match {
           case Right(movie) =>
-            val updatedState = currentState.copy(movie = Some(movie))
+            val updatedState = currentState.setMovie(movie)
             (
               updatedState,
               Result(
