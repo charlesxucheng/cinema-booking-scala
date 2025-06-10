@@ -18,7 +18,10 @@ case object MainMenu extends UserInteraction[AppState] {
       Result("", SetMovieAndShowTimes)
     ),
     "2" -> MenuOption("[2] Define seating map", Result("", DefineSeatingMap)),
-    "3" -> MenuOption("[3] Book tickets", Result("", BookTickets)),
+    "3" -> MenuOption(
+      "[3] Book tickets",
+      Result("", SelectShowTimeAndNumberOfSeats)
+    ),
     "4" -> MenuOption("[4] Exit", Result("", CinemaExit))
   )
 
@@ -49,7 +52,7 @@ case object MainMenu extends UserInteraction[AppState] {
       input.trim match {
         case "1" => (currentState, Result("", SetMovieAndShowTimes))
         case "2" => (currentState, Result("", DefineSeatingMap))
-        case "3" => (currentState, Result("", BookTickets))
+        case "3" => (currentState, Result("", SelectShowTimeAndNumberOfSeats))
         case "4" => (currentState, Result("", CinemaExit))
         case _ =>
           (currentState, Result(invalidInputMessage(input), MainMenu))

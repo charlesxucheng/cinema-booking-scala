@@ -1,7 +1,7 @@
 package cinema.ui.interactions
 
 import cinema.ui.interactions.{
-  BookTickets,
+  SelectShowTimeAndNumberOfSeats,
   DefineSeatingMap,
   MainMenu,
   SetMovieAndShowTimes
@@ -77,7 +77,7 @@ class MainMenuTest extends UnitSpec {
             .run(initialAppState)
             .value
           result._1 shouldBe initialAppState
-          result._2.interaction.value shouldBe BookTickets
+          result._2.interaction.value shouldBe SelectShowTimeAndNumberOfSeats
         }
       }
     }

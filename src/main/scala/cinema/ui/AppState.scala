@@ -6,7 +6,9 @@ import cinema.{CinemaHall, Movie, Screening}
 case class AppState private (
     movie: Option[Movie],
     cinemaHall: Option[CinemaHall],
-    screenings: Map[Int, Screening] = Map.empty
+    screenings: Map[Int, Screening],
+    selectedShowTimeId: Option[Int],
+    selectedNumberOfTickets: Option[Int]
 ) {
 
   private def defaultScreenings: Map[Int, Screening] = (for {
@@ -36,10 +38,19 @@ case class AppState private (
       this.screenings.updated(showtimeId, updatedScreening)
     this.copy(screenings = updatedScreenings)
   }
+
+  def setShowTimeAndNumberOfTickets(
+      showtimeId: Int,
+      numberOfTickets: Int
+  ): AppState = this.copy(
+    selectedShowTimeId = Some(showtimeId),
+    selectedNumberOfTickets = Some(numberOfTickets)
+  )
+
 }
 
 object AppState {
-  def empty: AppState = new AppState(None, None)
+  def empty: AppState = new AppState(None, None, Map.empty, None, None)
 
   given Empty[AppState] with
     def empty: AppState = AppState.empty
