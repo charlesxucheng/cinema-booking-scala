@@ -5,12 +5,20 @@ import cinema.ui.AppState
 import cinema.ui.base.UserInteraction
 
 case object ConfirmSeatSelection extends UserInteraction[AppState] {
-  override def getPrompt: String =
-    "Confirm seat selection by pressing Enter, or press Enter to return to main menu:"
+  override def getPrompt(state: AppState): String = {
+    val firstLine = 
+      s"You chose ${state.selectedNumberOfTickets.get} tickets for the ${state.screenings(state.selectedShowTimeId.get)} showtime."
+      
+    s"""$firstLine
+       |Confirm seat selection by pressing Enter, or press Enter to return to main menu:
+       |""".stripMargin
+  }
 
   override def handleInput(
       input: String
   ): State[AppState, UserInteraction.Result[AppState]] = State { currentState =>
     ???
   }
+
+  override def getPrompt: String = "Something went wrong. Press Enter to return to main menu."
 }
