@@ -1,12 +1,8 @@
 package cinema.ui.interactions
 
 import cinema.MovieDurations.MovieDuration
-import cinema.ui.interactions.{
-  DefineSeatingMap,
-  MainMenu,
-  SelectShowTimeAndNumberOfSeats,
-  SetMovieAndShowTimes
-}
+import cinema.TestFixtures.TWO_HOURS
+import cinema.ui.interactions.{DefineSeatingMap, MainMenu, SelectShowTimeAndNumberOfSeats, SetMovieAndShowTimes}
 import cinema.ui.{AppState, CinemaExit}
 import cinema.{CinemaHall, Movie, RectangularSeatingMap, UnitSpec}
 import org.scalatest.matchers.should.Matchers.*
@@ -49,7 +45,7 @@ class MainMenuTest extends UnitSpec {
       "go to the DefineSeatingMap user interaction" in {
         val initialAppState = AppState.empty
           .setMovie(
-            Movie("TestMovie", MovieDuration(120.minutes), LocalTime.of(14, 30))
+            Movie("TestMovie", TWO_HOURS, LocalTime.of(14, 30))
           )
         forAll(inputs) { input =>
           val result = MainMenu
@@ -73,7 +69,7 @@ class MainMenuTest extends UnitSpec {
       "go to the BookTickets user interaction" in {
         val initialAppState = AppState.empty
           .setMovie(
-            Movie("TestMovie", MovieDuration(120.minutes), LocalTime.of(14, 30))
+            Movie("TestMovie", TWO_HOURS, LocalTime.of(14, 30))
           )
           .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
         forAll(inputs) { input =>
@@ -150,7 +146,7 @@ class MainMenuTest extends UnitSpec {
           .setMovie(
             Movie.create(
               "TestMovie",
-              MovieDuration(120.minutes),
+              TWO_HOURS,
               Seq(LocalTime.of(14, 30), LocalTime.of(18, 50))
             )
           )

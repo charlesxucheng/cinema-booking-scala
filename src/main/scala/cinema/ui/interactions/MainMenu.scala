@@ -32,7 +32,7 @@ case object MainMenu extends UserInteraction[AppState] {
     val firstOptionDynamicMessage = menuOptions("1").description +
       state.movie
         .map(movie =>
-          s" (${movie.title}, ${movie.duration}, ${movie.showTimes.size} show times)"
+          s" (${movie.title}, ${movie.duration.toDuration.toMinutes} minutes, ${movie.showTimes.size} show times)"
         )
         .getOrElse("")
 

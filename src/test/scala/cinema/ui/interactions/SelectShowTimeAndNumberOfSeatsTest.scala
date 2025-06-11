@@ -9,18 +9,25 @@ import java.time.LocalTime
 import scala.concurrent.duration.DurationInt
 class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
 
+  private val testState = AppState.empty
+    .setMovie(
+      Movie.create(
+        "Avengers",
+        MovieDuration(120.minutes),
+        Seq(LocalTime.of(10, 0), LocalTime.of(14, 0))
+      )
+    )
+    .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
+
   "BookTickets user interaction" when {
     "only return key is pressed" should {
       "return to main menu with app state unchanged" in {
         val initialState = AppState.empty
           .setMovie(
-            Movie.create(
-              "Avengers",
-              MovieDuration(120.minutes),
-              Seq(LocalTime.of(10, 0))
-            )
+            Movie("Avengers", MovieDuration(120.minutes), LocalTime.of(10, 0))
           )
           .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
+        
         val (newState, result) = SelectShowTimeAndNumberOfSeats
           .handleInput("")
           .run(initialState)
@@ -41,17 +48,8 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
         (" 2 8", 2, 8)
       )
 
-      val initialState = AppState.empty
-        .setMovie(
-          Movie.create(
-            "Avengers",
-            MovieDuration(120.minutes),
-            Seq(LocalTime.of(10, 0), LocalTime.of(14, 0))
-          )
-        )
-        .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
-
       "save the input into AppState" in {
+        val initialState = testState
         forAll(validInputs) { (input, showtimeId, numberOfTickets) =>
           {
             val (newState, result) = SelectShowTimeAndNumberOfSeats
@@ -65,6 +63,7 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
       }
 
       "go to ConfirmSeatSelection user interaction" in {
+        val initialState = testState
         forAll(validInputs) { (input, expectedRows, expectedCols) =>
           {
             val (newState, result) = SelectShowTimeAndNumberOfSeats
@@ -90,15 +89,7 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
         "0,8"
       )
 
-      val initialState = AppState.empty
-        .setMovie(
-          Movie.create(
-            "Avengers",
-            MovieDuration(120.minutes),
-            Seq(LocalTime.of(10, 0), LocalTime.of(14, 0))
-          )
-        )
-        .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
+      val initialState = testState
 
       "display error message" in {
         forAll(invalidInputs) { input =>
