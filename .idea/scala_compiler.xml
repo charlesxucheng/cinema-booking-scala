@@ -11,6 +11,8 @@
       <option name="featureWarnings" value="true" />
       <option name="explainTypeErrors" value="true" />
     </profile>
-    <profile name="sbt 2" modules="cinema-booking-scala" />
+    <profile name="sbt 2" modules="cinema-booking-scala">
+      <option name="featureWarnings" value="true" />
+    </profile>
   </component>
 </project>

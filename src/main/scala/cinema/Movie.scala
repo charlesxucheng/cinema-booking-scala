@@ -11,8 +11,8 @@ object MovieDurations {
   opaque type MovieDuration = Duration
 
   object MovieDuration {
-    val minDuration: Duration = 1.minutes
-    val maxDuration: Duration = 23.hours
+    val minDuration: MovieDuration = 1.minutes
+    val maxDuration: MovieDuration = 23.hours
 
     def apply(d: Duration): MovieDuration = {
       require(
@@ -23,16 +23,15 @@ object MovieDurations {
     }
 
     private def isValid(duration: Duration) =
-      duration.gteq(minDuration) && duration.lteq(maxDuration)
+      duration.gteq(minDuration.toDuration) && duration.lteq(
+        maxDuration.toDuration
+      )
 
     extension (md: MovieDuration)
       def toJavaTemporalAmount: TemporalAmount = JDuration.ofNanos(md.toNanos)
-
-    given durationToMovieDuration: Conversion[Duration, MovieDuration] with
-      def apply(d: Duration): MovieDuration = MovieDuration(d)
-      
-    given movieDurationToDuration: Conversion[MovieDuration, Duration] with
-      def apply(md: MovieDuration): Duration = md
+      def toDuration: Duration = md
+      def -(other: Duration): MovieDuration = MovieDuration(md.minus(other))
+      def +(other: Duration): MovieDuration = MovieDuration(md.plus(other))
   }
 }
 

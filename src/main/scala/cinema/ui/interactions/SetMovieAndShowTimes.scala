@@ -2,6 +2,7 @@ package cinema.ui.interactions
 
 import cats.data.State
 import cinema.Movie
+import cinema.MovieDurations.MovieDuration
 import cinema.ui.AppState
 import cinema.ui.base.UserInteraction.Result
 import cinema.ui.base.{LS, UserInteraction}
@@ -57,7 +58,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
       try {
         val movieTitle = tokens.take(durationIndex).mkString(" ").trim
         val movieDuration = tokens(durationIndex).toInt.minutes
-        val timeFormatter =  DateTimeFormatter.ofPattern("H:mm")
+        val timeFormatter = DateTimeFormatter.ofPattern("H:mm")
 
         val showTimes = tokens
           .drop(durationIndex + 1)
@@ -72,7 +73,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
           }
           .toList
 
-        Right(Movie.create(movieTitle, movieDuration, showTimes))
+        Right(Movie.create(movieTitle, MovieDuration(movieDuration), showTimes))
       } catch {
         case e: IllegalArgumentException => Left(e.getMessage)
       }

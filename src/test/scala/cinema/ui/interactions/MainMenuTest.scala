@@ -1,9 +1,10 @@
 package cinema.ui.interactions
 
+import cinema.MovieDurations.MovieDuration
 import cinema.ui.interactions.{
-  SelectShowTimeAndNumberOfSeats,
   DefineSeatingMap,
   MainMenu,
+  SelectShowTimeAndNumberOfSeats,
   SetMovieAndShowTimes
 }
 import cinema.ui.{AppState, CinemaExit}
@@ -47,7 +48,9 @@ class MainMenuTest extends UnitSpec {
 
       "go to the DefineSeatingMap user interaction" in {
         val initialAppState = AppState.empty
-          .setMovie(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30)))
+          .setMovie(
+            Movie("TestMovie", MovieDuration(120.minutes), LocalTime.of(14, 30))
+          )
         forAll(inputs) { input =>
           val result = MainMenu
             .handleInput(input)
@@ -69,7 +72,9 @@ class MainMenuTest extends UnitSpec {
       )
       "go to the BookTickets user interaction" in {
         val initialAppState = AppState.empty
-          .setMovie(Movie("TestMovie", 120.minutes, LocalTime.of(14, 30)))
+          .setMovie(
+            Movie("TestMovie", MovieDuration(120.minutes), LocalTime.of(14, 30))
+          )
           .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
         forAll(inputs) { input =>
           val result = MainMenu
@@ -145,7 +150,7 @@ class MainMenuTest extends UnitSpec {
           .setMovie(
             Movie.create(
               "TestMovie",
-              120.minutes,
+              MovieDuration(120.minutes),
               Seq(LocalTime.of(14, 30), LocalTime.of(18, 50))
             )
           )

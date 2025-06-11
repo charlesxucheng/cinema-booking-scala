@@ -7,6 +7,8 @@ lazy val root = (project in file("."))
     name := "cinema-booking-scala"
   )
 
+scalacOptions += "-feature"
+
 libraryDependencies ++= Seq("org.scalactic" %% "scalactic" % "3.2.19",
   "org.scalatest" %% "scalatest" % "3.2.19" % "test",
   "org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % "test",

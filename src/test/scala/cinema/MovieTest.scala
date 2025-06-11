@@ -1,5 +1,6 @@
 package cinema
 
+import cinema.MovieDurations.MovieDuration
 import cinema.MovieDurations.MovieDuration.*
 import org.scalatest.matchers.should.Matchers.shouldBe
 
@@ -7,18 +8,18 @@ import java.time.LocalTime
 import scala.concurrent.duration.{Duration, DurationInt}
 
 class MovieTest extends UnitSpec {
-  private val durationA = 1.hours
+  private val durationA = MovieDuration(1.hours)
 
   "A Movie" should {
     "not allow empty titles" in {
       an[IllegalArgumentException] should be thrownBy Movie(
         "",
-        1.hours,
+        MovieDuration(1.hours),
         LocalTime.now()
       )
       an[IllegalArgumentException] should be thrownBy Movie(
         " ",
-        1.hours,
+        MovieDuration(1.hours),
         LocalTime.now()
       )
 
@@ -27,7 +28,7 @@ class MovieTest extends UnitSpec {
     s"not allow a duration that is shorter than $minDuration" in {
       an[IllegalArgumentException] should be thrownBy Movie(
         "Aladdin",
-        Duration.Zero,
+        MovieDuration(Duration.Zero),
         LocalTime.now()
       )
       an[IllegalArgumentException] should be thrownBy Movie(
@@ -46,25 +47,43 @@ class MovieTest extends UnitSpec {
     }
 
     "allow movies with numbers in the title" in {
-      Movie("Terminator 2", 1.hours, LocalTime.now()) shouldBe a[Movie]
-      Movie("Blade Runner 2049", 1.hours, LocalTime.now()) shouldBe a[Movie]
+      Movie("Terminator 2", MovieDuration(1.hours), LocalTime.now()) shouldBe a[
+        Movie
+      ]
+      Movie(
+        "Blade Runner 2049",
+        MovieDuration(1.hours),
+        LocalTime.now()
+      ) shouldBe a[Movie]
     }
 
     s"allow a duration that is within $minDuration and $maxDuration (inclusive)" in {
       Movie("Aladdin", minDuration, LocalTime.now()) shouldBe a[Movie]
       Movie("Bad Boys", maxDuration, LocalTime.now()) shouldBe a[Movie]
-      Movie("Charlie's Angels", 2.hours, LocalTime.now()) shouldBe a[Movie]
+      Movie(
+        "Charlie's Angels",
+        MovieDuration(2.hours),
+        LocalTime.now()
+      ) shouldBe a[Movie]
     }
 
     "allow one show time only" in {
-      Movie("Aladdin", 2.hours, LocalTime.of(23, 0)) shouldBe a[Movie]
+      Movie("Aladdin", MovieDuration(2.hours), LocalTime.of(23, 0)) shouldBe a[
+        Movie
+      ]
       Movie(
         "Beauty and the Beast",
         maxDuration,
         LocalTime.of(9, 30)
       ) shouldBe a[Movie]
-      Movie("Top Gun", 159.minutes, LocalTime.of(0, 0)) shouldBe a[Movie]
-      Movie("ABC", 120.minutes, LocalTime.of(9, 30)) shouldBe a[Movie]
+      Movie(
+        "Top Gun",
+        MovieDuration(159.minutes),
+        LocalTime.of(0, 0)
+      ) shouldBe a[Movie]
+      Movie("ABC", MovieDuration(120.minutes), LocalTime.of(9, 30)) shouldBe a[
+        Movie
+      ]
     }
 
     "not allow empty show times" in {
@@ -99,7 +118,11 @@ class MovieTest extends UnitSpec {
         (2.minutes, Seq(LocalTime.of(23, 55), LocalTime.of(0, 30)))
       )
       forAll(testData) { (duration: Duration, showTimes: Seq[LocalTime]) =>
-        Movie.create("Goodfellas", duration, showTimes) shouldBe a[Movie]
+        Movie.create(
+          "Goodfellas",
+          MovieDuration(duration),
+          showTimes
+        ) shouldBe a[Movie]
       }
     }
 
@@ -123,7 +146,7 @@ class MovieTest extends UnitSpec {
       forAll(testData) { (duration: Duration, showTimes: Seq[LocalTime]) =>
         an[IllegalArgumentException] should be thrownBy Movie.create(
           "Goodfellas",
-          duration,
+          MovieDuration(duration),
           showTimes
         )
       }

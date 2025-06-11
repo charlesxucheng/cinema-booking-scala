@@ -1,5 +1,6 @@
 package cinema
 
+import cinema.MovieDurations.MovieDuration
 import cinema.MovieDurations.MovieDuration.*
 import org.scalatest.matchers.should.Matchers.shouldBe
 
@@ -32,7 +33,8 @@ class ScreeningTest extends UnitSpec {
         )
 
         forAll(testData) { (duration, showTimes, index) =>
-          val movie = Movie.create("TestMovie", duration, showTimes)
+          val movie =
+            Movie.create("TestMovie", MovieDuration(duration), showTimes)
           val screening =
             Screening(movie, CinemaHall(RectangularSeatingMap(10, 10)), index)
           screening.showTime shouldBe showTimes(index)
@@ -49,7 +51,7 @@ class ScreeningTest extends UnitSpec {
           (
             150.minutes,
             Seq(
-              LocalTime.of(10, 35),
+              LocalTime.of(10, 35)
             ),
             -1
           ),
@@ -61,7 +63,8 @@ class ScreeningTest extends UnitSpec {
         )
 
         forAll(testData) { (duration, showTimes, index) =>
-          val movie = Movie.create("TestMovie", duration, showTimes)
+          val movie =
+            Movie.create("TestMovie", MovieDuration(duration), showTimes)
           an[IllegalArgumentException] should be thrownBy Screening(
             movie,
             CinemaHall(RectangularSeatingMap(10, 10)),

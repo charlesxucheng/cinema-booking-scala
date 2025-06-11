@@ -6,7 +6,7 @@ import scala.concurrent.duration.DurationInt
 import scala.language.implicitConversions
 
 object CinemaHall {
-  val MIN_INTERMISSION_DURATION: MovieDuration = 30.minutes
+  val MIN_INTERMISSION_DURATION: MovieDuration = MovieDuration(30.minutes)
   val DEFAULT_NAME: String = "default"
 
   def apply(name: String, seatingPlan: SeatingMap): CinemaHall =
@@ -21,11 +21,11 @@ case class CinemaHall private (
     seatingPlan: SeatingMap
 ) {
   require(
-    minimumIntermission > 0.minutes,
+    minimumIntermission.toDuration > 0.minutes,
     s"Minimum intermission must be greater than zero: $minimumIntermission"
   )
 
   def capacity: Int = seatingPlan.capacity
-  
+
   def duplicate: CinemaHall = this.copy()
 }
