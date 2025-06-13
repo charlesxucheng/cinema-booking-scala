@@ -19,8 +19,19 @@ class ConfirmSeatSelectionTest extends UnitSpec {
         .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
         .setShowTimeAndNumberOfTickets(0, 4)
       val prompt = ConfirmSeatSelection.getPrompt(state)
-      prompt should include (s"You chose ${state.selectedNumberOfTickets.get} tickets for the ${state.screenings(state.selectedShowTimeId.get)} showtime.")
+      prompt should include (s"You chose ${state.selectedNumberOfTickets.get} tickets for the ${state.screenings(state.selectedShowTimeId.get).showTime} showtime.")
     }
+  }
+  
+  "display the seating map showing selected seats" in {
+    val state = AppState.empty
+      .setMovie(
+        Movie("TestMovie", TWO_HOURS, LocalTime.of(14, 30))
+      )
+      .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
+      .setShowTimeAndNumberOfTickets(0, 4)
+    val prompt = ConfirmSeatSelection.getPrompt(state)
+    prompt should include (". . . o o o o . . .")
   }
 
 }
