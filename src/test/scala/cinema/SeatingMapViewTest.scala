@@ -33,7 +33,8 @@ class SeatingMapViewTest extends UnitSpec {
         ("rows", "cols", "expectedLength"),
         (5, 25, 51),
         (4, 4, 9),
-        (6, 5, 11)
+        (6, 5, 11),
+        (20, 10, 22)
       )
       forAll(testData) { (rows: Int, cols: Int, expectedLength: Int) => {
         val viewContent = RectangularSeatingMap(rows, cols).viewAsMultiPartContent
@@ -49,17 +50,17 @@ class SeatingMapViewTest extends UnitSpec {
   "An empty SeatingMap" should {
     "display all seats as available" in {
       RectangularSeatingMap(5, 5).viewAsMultiPartContent.seats shouldBe Seq(
-        "1 o o o o o", "2 o o o o o", "3 o o o o o", "4 o o o o o", "5 o o o o o")
+        "1 . . . . .", "2 . . . . .", "3 . . . . .", "4 . . . . .", "5 . . . . .")
     }
   }
 
   "A SeatingMap with some bookings" should {
     "show booked seats as booked" in {
       val initialSeatingMap = RectangularSeatingMap(5, 5)
-      val updatedSeatingMap = DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 2)._2
+      val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 2)
       
-      updatedSeatingMap.viewAsMultiPartContent.seats shouldBe Seq(
-        "1 o o o o o", "2 o o o o o", "3 o o o o o", "4 o o o o o", "5 o o x x o")
+      allocationResult.updatedSeatingMap.viewAsMultiPartContent.seats shouldBe Seq(
+        "1 . . . . .", "2 . . . . .", "3 . . . . .", "4 . . . . .", "5 . . o o .")
     }
   }
 

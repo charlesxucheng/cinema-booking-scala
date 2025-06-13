@@ -9,12 +9,8 @@ import scala.collection.immutable.Range
 
 object SeatAllocationStrategy {
 
-  type AllocationResult = (Seq[AllocatedSeatBlocks], SeatingMap)
-
   def refersToASeat(refPoint: Float): Boolean =
     refPoint - refPoint.intValue() == 0.0
-
-  case class AllocatedSeatBlocks(rowId: Int, seatBlocks: SeatBlocks)
 
   case class SingleBlockAllocationResult(
       allocatedSeatBlock: SeatBlock,
@@ -26,8 +22,10 @@ object SeatAllocationStrategy {
       numberOfSeatsToAllocate: Int
   )
 
-  case class SeatingMapAllocationResult(
-      allocatedSeatBlocks: AllocatedSeatBlocks,
+  case class AllocatedSeatBlocks(rowId: Int, seatBlocks: SeatBlocks)
+
+  case class AllocationResult(
+      allocatedSeats: Seq[AllocatedSeatBlocks],
       updatedSeatingMap: SeatingMap
   )
 }
@@ -65,7 +63,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
     val allocatedBlocks = result._1
     val updatedSeatingMap = seatingMap.bookSeats(result._2)
 
-    (allocatedBlocks, updatedSeatingMap)
+    AllocationResult(allocatedBlocks, updatedSeatingMap)
   }
 
   import PositionToRefPoint.*

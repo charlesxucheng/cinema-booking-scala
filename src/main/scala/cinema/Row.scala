@@ -38,7 +38,6 @@ object Row {
     }
 
   extension (seatBlock: SeatBlock)
-    def size: Int = seatBlock.end - seatBlock.start + 1
     def of(from: Int, to: Int): SeatBlock = {
       require(from > 0 && to > 0, "Both from and to must be greater than 0")
       Range.inclusive(from, to)

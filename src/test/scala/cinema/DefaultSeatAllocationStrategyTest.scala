@@ -76,11 +76,11 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               val allocatedSeats = fromPairs(allocatedSeatNumbers)
               val allocationResult = DefaultSeatAllocationStrategy
                 .allocateSeats(seatingMap, numberToAllocate)
-              allocationResult._1 shouldBe Seq(
+              allocationResult.allocatedSeats shouldBe Seq(
                 AllocatedSeatBlocks(rows, allocatedSeats)
               )
-              allocationResult._2.availableSeatCount shouldBe allocationResult._2.capacity - numberToAllocate
-              allocationResult._2
+              allocationResult.updatedSeatingMap.availableSeatCount shouldBe seatingMap.capacity - numberToAllocate
+              allocationResult.updatedSeatingMap
                 .seats(rows - 1)
                 .availableSeats shouldBe fromPairs(
                 Seq((1, cols))
@@ -122,7 +122,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               startSeatingMap,
               numberToAllocate
             )
-            allocationResult._1 shouldBe Seq(
+            allocationResult.allocatedSeats shouldBe Seq(
               AllocatedSeatBlocks(rows, fromPairs(allocatedSeatNumbers))
             )
         }
@@ -159,7 +159,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               startSeatingMap,
               numberToAllocate
             )
-            allocationResult._1 shouldBe Seq(
+            allocationResult.allocatedSeats shouldBe Seq(
               AllocatedSeatBlocks(rows, fromPairs(allocatedSeatNumbers))
             )
         }
@@ -205,7 +205,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               startSeatingMap,
               numberToAllocate
             )
-            allocationResult._1 shouldBe Seq(
+            allocationResult.allocatedSeats shouldBe Seq(
               AllocatedSeatBlocks(rows, fromPairs(allocatedSeatNumbers))
             )
         }
