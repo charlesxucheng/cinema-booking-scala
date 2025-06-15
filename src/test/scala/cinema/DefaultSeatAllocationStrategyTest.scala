@@ -1,9 +1,9 @@
 package cinema
 
 import cinema.Row.SeatBlocks
-import cinema.Row.SeatBlocks.*
+//import cinema.Row.SeatBlocks.*
 import cinema.SeatAllocationStrategy.*
-import org.scalatest.matchers.should.Matchers.shouldBe
+import org.scalatest.matchers.should.Matchers.*
 
 class DefaultSeatAllocationStrategyTest extends UnitSpec {
 
@@ -53,38 +53,48 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
     "given a fully available row of seats and a number of seats requested which is smaller than the row's seat count" should {
       "allocate the center seats (with a right bias, i.e. if it cannot be perfectly centered, then it will take 1 more seat to the right than left)" in {
         val testData = Table(
-          ("rows", "cols", "numberToAllocate", "allocatedSeats"),
-          (5, 5, 1, Seq((3, 3))),
-          (5, 5, 2, Seq((3, 4))),
-          (5, 4, 1, Seq((3, 3))),
-          (5, 4, 2, Seq((2, 3))),
-          (10, 20, 2, Seq((10, 11))),
-          (10, 20, 4, Seq((9, 12))),
-          (20, 45, 11, Seq((18, 28))),
-          (10, 20, 19, Seq((2, 20))),
-          (20, 45, 45, Seq((1, 45)))
+          (
+            "Rows",
+            "Cols",
+            "Number Of Seats To Allocate",
+            "Expected Seat Allocation",
+            "Remaining Seats"
+          ),
+          (5, 5, 1, Seq((3, 3)), Seq((1, 2), (4, 5))),
+          (5, 5, 2, Seq((3, 4)), Seq((1, 2), (5, 5))),
+          (5, 4, 1, Seq((3, 3)), Seq((1, 2), (4, 4))),
+          (5, 4, 2, Seq((2, 3)), Seq((1, 1), (4, 4))),
+          (10, 20, 2, Seq((10, 11)), Seq((1, 9), (12, 20))),
+          (10, 20, 4, Seq((9, 12)), Seq((1, 8), (13, 20))),
+          (20, 45, 11, Seq((18, 28)), Seq((1, 17), (29, 45))),
+          (10, 20, 19, Seq((2, 20)), Seq((1, 1))),
+          (20, 45, 45, Seq((1, 45)), Seq.empty)
         )
         forAll(testData) {
           (
               rows: Int,
               cols: Int,
               numberToAllocate: Int,
-              allocatedSeatNumbers: Seq[(Int, Int)]
+              expectedSeats: Seq[(Int, Int)],
+              remainingSeats: Seq[(Int, Int)]
           ) =>
             {
               val seatingMap = RectangularSeatingMap(rows, cols)
-              val allocatedSeats = fromPairs(allocatedSeatNumbers)
+              val expectedAllocations =
+                SeatBlocks.of(expectedSeats)
+
               val allocationResult = DefaultSeatAllocationStrategy
                 .allocateSeats(seatingMap, numberToAllocate)
+
               allocationResult.allocatedSeats shouldBe Seq(
-                AllocatedSeatBlocks(rows, allocatedSeats)
+                AllocatedSeatBlocks(1, expectedAllocations)
               )
-              allocationResult.updatedSeatingMap.availableSeatCount shouldBe seatingMap.capacity - numberToAllocate
+              allocationResult.updatedSeatingMap.availableSeatCount should be(
+                seatingMap.capacity - numberToAllocate
+              )
               allocationResult.updatedSeatingMap
-                .seats(rows - 1)
-                .availableSeats shouldBe fromPairs(
-                Seq((1, cols))
-              ) -- allocatedSeats
+                .row(1)
+                .availableSeats shouldBe SeatBlocks.of(remainingSeats)
             }
         }
       }
@@ -93,17 +103,18 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
       "allocate from the side that is nearer to the center of the row (right side if equally near)" in {
         val testData = Table(
           (
-            "rows",
-            "cols",
-            "existingAllocation",
-            "numberToAllocate",
-            "allocatedSeats"
+            "Rows",
+            "Cols",
+            "Existing Allocation",
+            "Number Of Seats To Allocate",
+            "Expected Seat Allocation",
+            "Remaining Seats"
           ),
-          (10, 20, Seq((10, 11)), 2, Seq((12, 13))),
-          (10, 20, Seq((10, 14)), 6, Seq((4, 9))),
-          (1, 11, Seq((6, 6)), 3, Seq((7, 9))),
-          (1, 13, Seq((1, 3)), 8, Seq((4, 11))),
-          (1, 12, Seq((4, 12)), 2, Seq((2, 3)))
+          (10, 20, Seq((10, 11)), 2, Seq((12, 13)), Seq((1, 9), (14, 20))),
+          (10, 20, Seq((10, 14)), 6, Seq((4, 9)), Seq((1, 3), (15, 20))),
+          (1, 11, Seq((6, 6)), 3, Seq((7, 9)), Seq((1, 5), (10, 11))),
+          (1, 13, Seq((1, 3)), 8, Seq((4, 11)), Seq((12, 13))),
+          (1, 12, Seq((4, 12)), 2, Seq((2, 3)), Seq((1, 1)))
         )
         forAll(testData) {
           (
@@ -111,36 +122,47 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               cols: Int,
               existingAllocation: Seq[(Int, Int)],
               numberToAllocate: Int,
-              allocatedSeatNumbers: Seq[(Int, Int)]
+              expectedSeats: Seq[(Int, Int)],
+              remainingSeats: Seq[(Int, Int)]
           ) =>
-            val initialSeatingMap = RectangularSeatingMap(rows, cols)
             val rowsAllocated = IndexedSeq(
-              Row(rows, cols).assignSeats(fromPairs(existingAllocation))
+              Row(1, cols).assignSeats(SeatBlocks.of(existingAllocation))
             )
-            val startSeatingMap = initialSeatingMap.bookSeats(rowsAllocated)
+            val seatingMap =
+              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
-              startSeatingMap,
+              seatingMap,
               numberToAllocate
             )
+
             allocationResult.allocatedSeats shouldBe Seq(
-              AllocatedSeatBlocks(rows, fromPairs(allocatedSeatNumbers))
+              AllocatedSeatBlocks(1, SeatBlocks.of(expectedSeats))
             )
+            allocationResult.updatedSeatingMap.availableSeatCount should be(
+              seatingMap.availableSeatCount - numberToAllocate
+            )
+            allocationResult.updatedSeatingMap
+              .row(1)
+              .availableSeats shouldBe SeatBlocks.of(remainingSeats)
         }
       }
     }
+
     "given a row of seats with one block booked and a number of seats requested which cannot fit into the next rightful block" should {
       "allocate multiple blocks starting with the side that is nearer to the center of the row" in {
         val testData = Table(
           (
-            "rows",
-            "cols",
-            "existingAllocation",
-            "numberToAllocate",
-            "allocatedSeats"
+            "Rows",
+            "Cols",
+            "Existing Allocation",
+            "Number Of Seats To Allocate",
+            "Expected Seat Allocation",
+            "Remaining Seats"
           ),
-          (10, 20, Seq((4, 16)), 5, Seq((17, 20), (3, 3))),
-          (1, 20, Seq((4, 16)), 7, Seq((17, 20), (1, 3))),
-          (5, 23, Seq((8, 20)), 9, Seq((1, 7), (21, 22)))
+          (10, 20, Seq((4, 16)), 5, Seq((17, 20), (3, 3)), Seq((1, 2))),
+          (1, 20, Seq((4, 16)), 7, Seq((17, 20), (1, 3)), Seq.empty),
+          (5, 23, Seq((8, 20)), 9, Seq((1, 7), (21, 22)), Seq((23, 23)))
         )
         forAll(testData) {
           (
@@ -148,20 +170,30 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               cols: Int,
               existingAllocation: Seq[(Int, Int)],
               numberToAllocate: Int,
-              allocatedSeatNumbers: Seq[(Int, Int)]
+              expectedSeats: Seq[(Int, Int)],
+              remainingSeats: Seq[(Int, Int)]
           ) =>
-            val initialSeatingMap = RectangularSeatingMap(rows, cols)
             val rowsAllocated = IndexedSeq(
-              Row(rows, cols).assignSeats(fromPairs(existingAllocation))
+              Row(1, cols).assignSeats(SeatBlocks.of(existingAllocation))
             )
-            val startSeatingMap = initialSeatingMap.bookSeats(rowsAllocated)
+
+            val seatingMap =
+              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
-              startSeatingMap,
+              seatingMap,
               numberToAllocate
             )
             allocationResult.allocatedSeats shouldBe Seq(
-              AllocatedSeatBlocks(rows, fromPairs(allocatedSeatNumbers))
+              AllocatedSeatBlocks(1, SeatBlocks.of(expectedSeats))
             )
+            // TODO: Move to property based tests
+//            allocationResult.updatedSeatingMap.availableSeatCount should be(
+//              seatingMap.availableSeatCount - numberToAllocate
+//            )
+//            allocationResult.updatedSeatingMap
+//              .row(1)
+//              .availableSeats shouldBe SeatBlocks.create(remainingSeats)
         }
       }
     }
@@ -170,11 +202,11 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
 
         val testData = Table(
           (
-            "rows",
-            "cols",
-            "existingAllocation",
-            "numberToAllocate",
-            "allocatedSeats"
+            "Rows",
+            "Cols",
+            "Existing Allocation",
+            "Number Of Seats To Allocate",
+            "Expected Seat Allocation"
           ),
           (10, 20, Seq((8, 11), (14, 17)), 5, Seq((12, 13), (5, 7))),
           (1, 20, Seq((5, 6), (7, 9)), 4, Seq((10, 13))),
@@ -194,19 +226,21 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               cols: Int,
               existingAllocation: Seq[(Int, Int)],
               numberToAllocate: Int,
-              allocatedSeatNumbers: Seq[(Int, Int)]
+              allocatedSeats: Seq[(Int, Int)]
           ) =>
-            val initialSeatingMap = RectangularSeatingMap(rows, cols)
             val rowsAllocated = IndexedSeq(
-              Row(rows, cols).assignSeats(fromPairs(existingAllocation))
+              Row(1, cols).assignSeats(SeatBlocks.of(existingAllocation))
             )
-            val startSeatingMap = initialSeatingMap.bookSeats(rowsAllocated)
+            val seatingMap =
+              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
-              startSeatingMap,
+              seatingMap,
               numberToAllocate
             )
+
             allocationResult.allocatedSeats shouldBe Seq(
-              AllocatedSeatBlocks(rows, fromPairs(allocatedSeatNumbers))
+              AllocatedSeatBlocks(1, SeatBlocks.of(allocatedSeats))
             )
         }
       }
@@ -215,11 +249,11 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
       "allocate from the last row onwards" in {
         val testData = Table(
           (
-            "rows",
-            "cols",
-            "existingAllocation",
-            "numberToAllocate",
-            "allocatedSeats"
+            "Rows",
+            "Cols",
+            "Existing Allocation",
+            "Number Of Seats To Allocate",
+            "Expected Seat Allocation"
           ),
           (10, 20, Seq.empty, 30, Seq(Seq((1, 20)), Seq((6, 15)))),
           (10, 20, Seq((5, 15)), 25, Seq(Seq((1, 4), (16, 20)), Seq((3, 18)))),
@@ -240,17 +274,19 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               numberToAllocate: Int,
               allocatedSeatNumbers: Seq[Seq[(Int, Int)]]
           ) =>
-            val initialSeatingMap = RectangularSeatingMap(rows, cols)
             val rowsAllocated = IndexedSeq(
-              Row(rows, cols).assignSeats(fromPairs(existingAllocation))
+              Row(1, cols).assignSeats(SeatBlocks.of(existingAllocation))
             )
-            val startSeatingMap = initialSeatingMap.bookSeats(rowsAllocated)
+            val seatingMap =
+              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
-              startSeatingMap,
+              seatingMap,
               numberToAllocate
             )
-            val expectedBlocks = (rows to 1 by -1)
-              .zip(allocatedSeatNumbers.map(fromPairs))
+
+            val expectedBlocks = (1 to rows)
+              .zip(allocatedSeatNumbers.map(SeatBlocks.of))
               .map(p => AllocatedSeatBlocks(p._1, p._2))
             allocationResult._1 shouldBe expectedBlocks
         }
@@ -262,20 +298,20 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
         val firstAllocationResult =
           DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 30)
         val secondAllocationResult = DefaultSeatAllocationStrategy
-          .allocateSeats(firstAllocationResult._2, 30)
+          .allocateSeats(firstAllocationResult.updatedSeatingMap, 30)
         val thirdAllocationResult = DefaultSeatAllocationStrategy.allocateSeats(
-          secondAllocationResult._2,
+          secondAllocationResult.updatedSeatingMap,
           4
         )
-        firstAllocationResult._1 shouldBe Seq(
-          AllocatedSeatBlocks(8, fromPairs(Seq((6, 35))))
+        firstAllocationResult.allocatedSeats shouldBe Seq(
+          AllocatedSeatBlocks(1, SeatBlocks.of(Seq((6, 35))))
         )
-        secondAllocationResult._1 shouldBe Seq(
-          AllocatedSeatBlocks(8, fromPairs(Seq((1, 5), (36, 40)))),
-          AllocatedSeatBlocks(7, fromPairs(Seq((11, 30))))
+        secondAllocationResult.allocatedSeats shouldBe Seq(
+          AllocatedSeatBlocks(1, SeatBlocks.of(Seq((1, 5), (36, 40)))),
+          AllocatedSeatBlocks(2, SeatBlocks.of(Seq((11, 30))))
         )
-        thirdAllocationResult._1 shouldBe Seq(
-          AllocatedSeatBlocks(7, fromPairs(Seq((31, 34))))
+        thirdAllocationResult.allocatedSeats shouldBe Seq(
+          AllocatedSeatBlocks(2, SeatBlocks.of(Seq((31, 34))))
         )
       }
     }

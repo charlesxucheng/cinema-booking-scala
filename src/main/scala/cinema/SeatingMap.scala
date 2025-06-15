@@ -5,7 +5,7 @@ import cinema.SeatingMapView.{longHeader, shortHeader}
 
 object SeatingMap {
   private def convertToStrings(m: SeatingMap): Seq[String] = {
-    m.seats.map(r => {
+    m.seatsForDisplay.map(r => {
       val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats
         .map((false, _))
         .sortBy(x => x._2.start)
@@ -52,9 +52,18 @@ object SeatingMap {
 
 sealed trait SeatingMap {
   val seats: IndexedSeq[Row]
+  val seatsForDisplay: IndexedSeq[Row]
   val availableRows: IndexedSeq[Row]
 
   def capacity: Int
+
+  def row(rowId: Int): Row = {
+    require(
+      rowId >= 0 && rowId <= seats.length,
+      s"Row ID must be between 0 and ${seats.length} (inclusive): $rowId"
+    )
+    seats(rowId - 1)
+  }
 
   def availableSeatCount: Int
 
@@ -77,7 +86,7 @@ object RectangularSeatingMap {
     )
 }
 
-// The rows and columns are both 1-based, with row 1 nearest to the screen, and column 1 being the leftmost seat.
+// The rows and columns are both 1-based, with row 1 furthest from the screen, and column 1 being the leftmost seat.
 case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
     extends SeatingMap {
   require(
@@ -94,7 +103,8 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
   )
 
   override val availableRows: IndexedSeq[Row] =
-    seats.filter(row => row.availableSeats.nonEmpty).reverse
+    seats.filter(row => row.availableSeats.nonEmpty)
+  override val seatsForDisplay: IndexedSeq[Row] = seats.reverse
 
   override def capacity: Int = rows * cols
 
