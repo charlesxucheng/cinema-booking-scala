@@ -1,9 +1,8 @@
 package cinema
 
 import cinema.Row.SeatBlocks
-import org.scalacheck.Gen
-//import cinema.Row.SeatBlocks.*
 import cinema.SeatAllocationStrategy.*
+import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers.*
 
 class DefaultSeatAllocationStrategyTest extends UnitSpec {

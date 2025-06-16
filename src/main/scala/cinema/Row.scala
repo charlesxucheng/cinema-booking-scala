@@ -15,7 +15,7 @@ object Row {
   opaque type SeatBlocks = Seq[SeatBlock]
 
   private val minRowId = 1
-  private val maxRowId = 52
+  val maxRowId = 702 // A-Z, AA - ZZ, 26 * 26 + 26
 
   def apply(id: Int, seatCount: Int): Row =
     Row.apply(id, rowIdToName(id), seatCount)
@@ -28,8 +28,25 @@ object Row {
       id >= minRowId && id <= maxRowId,
       s"Row ID must be between $minRowId and $maxRowId (both inclusive)"
     )
-    if (id <= 26) ('A' + id - 1).toChar.toString
-    else "A" + ('A' + id - 27).toChar.toString
+    decimalToAlpha(id)
+  }
+
+  private def decimalToAlpha(num: Int): String = {
+    @tailrec
+    def decimalToAlphaRec(
+        num: Int,
+        firstDigit: Option[Char]
+    ): (Option[Char], Char) =
+      if (num <= 26) (firstDigit, ('A' + num - 1).toChar)
+      else
+        decimalToAlphaRec(
+          num - 26,
+          firstDigit.map(c => (c + 1).toChar).orElse(Some('A'))
+        )
+
+    val digits = decimalToAlphaRec(num, None)
+
+    s"${digits._1.getOrElse("")}${digits._2}"
   }
 
   private def isOverlapping(ranges: SeatBlocks): Boolean =

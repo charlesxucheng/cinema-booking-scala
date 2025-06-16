@@ -4,19 +4,28 @@ import cinema.RectangularSeatingMap.{maxCols, maxRows}
 import cinema.SeatingMapView.{longHeader, shortHeader}
 
 object SeatingMap {
+  private val availableSeatSymbol = "."
+  private val bookedSeatSymbol = "o"
+
   private def convertToStrings(m: SeatingMap): Seq[String] = {
     m.seatsForDisplay.map(r => {
       val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats
         .map((false, _))
         .sortBy(x => x._2.start)
 
+      val seatSpacing =
+        " " * Math.max(m.row(1).seatCount.toString.length - 1, 1)
+
       val symbols = allSeats
         .sortBy(x => x._2.start)
-        .map(b => if (b._1) " o" * b._2.size else " ." * b._2.size)
+        .map(b =>
+          if (b._1) s"$seatSpacing$bookedSeatSymbol" * b._2.size
+          else s"$seatSpacing$availableSeatSymbol" * b._2.size
+        )
 
-      val maxIdLength = m.seats.map(_.id.toString.length).max
+      val maxIdLength = m.seats.map(_.name.length).max
 
-      symbols.foldLeft(r.id.toString.padTo(maxIdLength, ' '))(_ + _)
+      symbols.foldLeft(r.name.padTo(maxIdLength, ' '))(_ + _)
     })
   }
 
@@ -75,14 +84,14 @@ sealed trait SeatingMap {
 }
 
 object RectangularSeatingMap {
-  val maxRows = 99
-  val maxCols = 99
+  val maxRows = 100
+  val maxCols = 200
 
   def apply(rows: Int, cols: Int): RectangularSeatingMap =
     RectangularSeatingMap(
       rows,
       cols,
-      (1 to rows).map(rowId => Row(rowId, rowId.toString, cols))
+      (1 to rows).map(rowId => Row(rowId, cols))
     )
 }
 

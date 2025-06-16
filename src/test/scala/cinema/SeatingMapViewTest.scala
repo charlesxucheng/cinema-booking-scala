@@ -1,6 +1,7 @@
 package cinema
 
 import cinema.SeatingMapView.{*, given}
+import org.scalacheck.Gen
 import org.scalatest.Inspectors
 import org.scalatest.matchers.should.Matchers.*
 
@@ -30,6 +31,24 @@ class SeatingMapViewTest extends UnitSpec {
         }
       }
     }
+    
+    "have 1 to 99 seats per row" should {
+      "display 1 space between two seats" in {
+        val cols = Gen.choose(1, 99)
+        forAll(cols) { col =>
+          RectangularSeatingMap(5, col).viewAsSingleString should include(" ." * col)
+        }
+      }
+    }
+    
+    "have more than 99 seats per row" should {
+      "display 2 spaces between two seats" in {
+        val cols = Gen.choose(100, RectangularSeatingMap.maxCols)
+        forAll(cols) { col =>
+          RectangularSeatingMap(5, col).viewAsSingleString should include("  ." * col)
+        }
+      }
+    }
   }
 
   "Every line in the SeatingMapView" should {
@@ -39,7 +58,8 @@ class SeatingMapViewTest extends UnitSpec {
         (5, 25, 51),
         (4, 4, 9),
         (6, 5, 11),
-        (20, 10, 22)
+        (20, 10, 21),
+        (27, 10, 22)
       )
       forAll(testData) { (rows: Int, cols: Int, expectedLength: Int) =>
         {
@@ -58,11 +78,11 @@ class SeatingMapViewTest extends UnitSpec {
   "An empty SeatingMap" should {
     "display all seats as available" in {
       RectangularSeatingMap(5, 5).viewAsMultiPartContent.seats shouldBe Seq(
-        "5 . . . . .",
-        "4 . . . . .",
-        "3 . . . . .",
-        "2 . . . . .",
-        "1 . . . . ."
+        "E . . . . .",
+        "D . . . . .",
+        "C . . . . .",
+        "B . . . . .",
+        "A . . . . ."
       )
     }
   }
@@ -74,11 +94,11 @@ class SeatingMapViewTest extends UnitSpec {
         DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 2)
 
       allocationResult.updatedSeatingMap.viewAsMultiPartContent.seats shouldBe Seq(
-        "5 . . . . .",
-        "4 . . . . .",
-        "3 . . . . .",
-        "2 . . . . .",
-        "1 . . o o ."
+        "E . . . . .",
+        "D . . . . .",
+        "C . . . . .",
+        "B . . . . .",
+        "A . . o o ."
       )
     }
   }
