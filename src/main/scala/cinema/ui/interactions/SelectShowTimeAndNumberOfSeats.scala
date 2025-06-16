@@ -92,7 +92,7 @@ case object SelectShowTimeAndNumberOfSeats extends UserInteraction[AppState] {
     val splitInput = input.trim.split(" ").map(_.trim)
     if (splitInput.length != 2)
       Left(
-        "Expected two numbers but found ${splitInput.length}."
+        s"Expected two numbers but found ${splitInput.length}."
       )
     else
       try {

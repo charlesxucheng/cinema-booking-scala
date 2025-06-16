@@ -5,10 +5,7 @@ import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class CinemaHallTest
-    extends UnitSpec
-    with TableDrivenPropertyChecks
-    with ScalaCheckPropertyChecks {
+class CinemaHallTest extends UnitSpec {
 
   "A CinemaHall" when {
     "created without a name" should {

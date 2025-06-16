@@ -1,6 +1,7 @@
 package cinema
 
 import cinema.Row.SeatBlocks
+import org.scalacheck.Gen
 //import cinema.Row.SeatBlocks.*
 import cinema.SeatAllocationStrategy.*
 import org.scalatest.matchers.should.Matchers.*
@@ -89,9 +90,6 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               allocationResult.allocatedSeats shouldBe Seq(
                 AllocatedSeatBlocks(1, expectedAllocations)
               )
-              allocationResult.updatedSeatingMap.availableSeatCount should be(
-                seatingMap.capacity - numberToAllocate
-              )
               allocationResult.updatedSeatingMap
                 .row(1)
                 .availableSeats shouldBe SeatBlocks.of(remainingSeats)
@@ -99,6 +97,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
         }
       }
     }
+
     "given a row of seats with one block booked and a number of seats requested which can fit into th next rightful block" should {
       "allocate from the side that is nearer to the center of the row (right side if equally near)" in {
         val testData = Table(
@@ -138,9 +137,6 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
 
             allocationResult.allocatedSeats shouldBe Seq(
               AllocatedSeatBlocks(1, SeatBlocks.of(expectedSeats))
-            )
-            allocationResult.updatedSeatingMap.availableSeatCount should be(
-              seatingMap.availableSeatCount - numberToAllocate
             )
             allocationResult.updatedSeatingMap
               .row(1)
@@ -187,16 +183,13 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
             allocationResult.allocatedSeats shouldBe Seq(
               AllocatedSeatBlocks(1, SeatBlocks.of(expectedSeats))
             )
-            // TODO: Move to property based tests
-//            allocationResult.updatedSeatingMap.availableSeatCount should be(
-//              seatingMap.availableSeatCount - numberToAllocate
-//            )
-//            allocationResult.updatedSeatingMap
-//              .row(1)
-//              .availableSeats shouldBe SeatBlocks.create(remainingSeats)
+            allocationResult.updatedSeatingMap
+              .row(1)
+              .availableSeats shouldBe SeatBlocks.of(remainingSeats)
         }
       }
     }
+
     "given a row of seats with multiple blocks booked and a number of seats requested which fits into the row" should {
       "allocate from the remaining blocks based on their distance to the middle" in {
 
@@ -245,6 +238,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
         }
       }
     }
+
     "given multiple row of seats and a number of seats requested which do not fits into one row" should {
       "allocate from the last row onwards" in {
         val testData = Table(
@@ -292,6 +286,83 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
         }
       }
     }
+
+    "some seats were allocated" should {
+      "have available seats reduced by the number allocated" in {
+        val validRows = Gen.choose(1, RectangularSeatingMap.maxRows)
+        val validCols = Gen.choose(1, RectangularSeatingMap.maxCols)
+
+        forAll(validRows, validCols) { (rows, cols) =>
+          val seatingMap = RectangularSeatingMap(rows, cols)
+          val numberToAllocate = Gen.choose(1, cols * rows).sample.get
+          val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
+            seatingMap,
+            numberToAllocate
+          )
+          allocationResult.updatedSeatingMap.availableSeatCount should be(
+            seatingMap.availableSeatCount - numberToAllocate
+          )
+        }
+      }
+    }
+
+    "some seats were allocated from a single row only" should {
+      "have the correct remaining seats in that row" in {
+        val validRows = Gen.choose(1, RectangularSeatingMap.maxRows)
+        val validCols = Gen.choose(1, RectangularSeatingMap.maxCols)
+
+        forAll(validRows, validCols) { (rows, cols) =>
+          val seatingMap = RectangularSeatingMap(rows, cols)
+          val numberToAllocate = Gen.choose(1, cols).sample.get
+          val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
+            seatingMap,
+            numberToAllocate
+          )
+          val allocatedSeats: SeatBlocks =
+            allocationResult.allocatedSeats.head.seatBlocks
+
+          allocationResult.updatedSeatingMap
+            .row(1)
+            .availableSeats shouldBe SeatBlocks.of(
+            Seq((1, cols))
+          ) -- allocatedSeats
+        }
+      }
+    }
+
+    "some seats were allocated from multiple rows" should {
+      "have the correct number of remaining seats in each affected row" in {
+        val validRows = Gen.choose(1, RectangularSeatingMap.maxRows)
+        val validCols = Gen.choose(1, RectangularSeatingMap.maxCols)
+
+        forAll(validRows, validCols) { (rows, cols) =>
+          val seatingMap = RectangularSeatingMap(rows, cols)
+          val numberToAllocate = Gen.choose(1, cols * rows).sample.get
+          val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
+            seatingMap,
+            numberToAllocate
+          )
+          val firstNonFullRow = numberToAllocate / cols + 1
+          val firstNonFullRowSeatAllocation = numberToAllocate % cols
+
+          val allocatedSeats: SeatBlocks =
+            allocationResult.allocatedSeats.head.seatBlocks
+
+          for (row <- 1 until firstNonFullRow) {
+            allocationResult.updatedSeatingMap
+              .row(row)
+              .availableSeats
+              .seatCount shouldBe 0
+          }
+
+          allocationResult.updatedSeatingMap
+            .row(firstNonFullRow)
+            .availableSeats
+            .seatCount shouldBe cols - firstNonFullRowSeatAllocation
+        }
+      }
+    }
+
     "given a series of seat allocation requests" should {
       "allocate seats correctly across rows" in {
         val initialSeatingMap = RectangularSeatingMap(8, 40)
@@ -316,5 +387,4 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
       }
     }
   }
-
 }
