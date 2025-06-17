@@ -102,5 +102,13 @@ class SeatingMapViewTest extends UnitSpec {
       )
     }
   }
+  
+  "A SeatingMap that has more than 26 rows" should {
+    "display an extra space after row name for single letter row names" in {
+      val rows = RectangularSeatingMap(27, 5).viewAsMultiPartContent.seats
+      rows.head shouldBe "AA . . . . ."
+      rows.last shouldBe "A  . . . . ."
+    }
+  }
 
 }
