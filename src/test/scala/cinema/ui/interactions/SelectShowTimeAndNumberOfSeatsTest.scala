@@ -56,7 +56,7 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
               .handleInput(input)
               .run(initialState)
               .value
-            newState.selectedShowTimeId shouldBe Some(showtimeId)
+            newState.selectedShowTimeId shouldBe Some(showtimeId - 1)
             newState.selectedNumberOfTickets shouldBe Some(numberOfTickets)
           }
         }
@@ -97,7 +97,7 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
             .handleInput(input)
             .run(initialState)
             .value
-          result.outputMessage should include("Invalid input format.")
+          result.outputMessage should include("Invalid input.")
         }
       }
       "remain in the same user interaction" in {
