@@ -11,6 +11,17 @@ case class AppState private (
     selectedNumberOfTickets: Option[Int]
 ) {
 
+  require(
+    selectedShowTimeId.isEmpty || screenings.contains(selectedShowTimeId.get),
+    s"Invalid showtime id $selectedShowTimeId"
+  )
+
+  def setMovie(movie: Movie): AppState =
+    this.copy(movie = Some(movie)).setDefaultScreenings()
+
+  private def setDefaultScreenings(): AppState =
+    this.copy(screenings = defaultScreenings)
+
   private def defaultScreenings: Map[Int, Screening] = (for {
     movie <- movie
     cinemaHall <- cinemaHall
@@ -20,12 +31,6 @@ case class AppState private (
         index -> Screening(movie, cinemaHall.duplicate, index)
       }
   }).getOrElse(Seq.empty).toMap
-
-  private def setDefaultScreenings(): AppState =
-    this.copy(screenings = defaultScreenings)
-
-  def setMovie(movie: Movie): AppState =
-    this.copy(movie = Some(movie)).setDefaultScreenings()
 
   def setCinemaHall(cinemaHall: CinemaHall): AppState =
     this.copy(cinemaHall = Some(cinemaHall)).setDefaultScreenings()
@@ -46,7 +51,6 @@ case class AppState private (
     selectedShowTimeId = Some(showtimeId),
     selectedNumberOfTickets = Some(numberOfTickets)
   )
-
 }
 
 object AppState {
