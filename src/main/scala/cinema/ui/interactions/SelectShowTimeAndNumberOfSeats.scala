@@ -45,7 +45,7 @@ case object SelectShowTimeAndNumberOfSeats extends UserInteraction[AppState] {
             showtime
               .map { screening =>
                 {
-                  val seatingMap = screening.cinemaHall.seatingPlan
+                  val seatingMap = screening.cinemaHall.seatingMap
                   try {
                     val updatedSeatingMap = DefaultSeatAllocationStrategy
                       .allocateSeats(seatingMap, numberOfTickets)

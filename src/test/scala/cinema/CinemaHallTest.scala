@@ -30,7 +30,7 @@ class CinemaHallTest extends UnitSpec {
 
         hall.name shouldBe name
         hall.minimumIntermission shouldBe CinemaHall.MIN_INTERMISSION_DURATION
-        hall.seatingPlan shouldBe seatingMap
+        hall.seatingMap shouldBe seatingMap
       }
     }
 

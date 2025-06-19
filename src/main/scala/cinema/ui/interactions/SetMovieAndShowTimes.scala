@@ -38,7 +38,7 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
             (
               currentState,
               Result(
-                s"""Invalid input format. Please use: [Title] [DurationInMinutes] [H:MM] [H:MM] ...
+                s"""Invalid input. Please use: [Title] [DurationInMinutes] [H:MM] [H:MM] ...
                     |Specific error: $errorMessage
                     |""".stripMargin,
                 this

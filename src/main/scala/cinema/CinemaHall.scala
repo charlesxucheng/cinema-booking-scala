@@ -18,14 +18,14 @@ object CinemaHall {
 case class CinemaHall private (
     name: String,
     minimumIntermission: MovieDuration,
-    seatingPlan: SeatingMap
+    seatingMap: SeatingMap
 ) {
   require(
     minimumIntermission.toDuration > 0.minutes,
     s"Minimum intermission must be greater than zero: $minimumIntermission"
   )
 
-  def capacity: Int = seatingPlan.capacity
+  def capacity: Int = seatingMap.capacity
 
   def duplicate: CinemaHall = this.copy()
 }

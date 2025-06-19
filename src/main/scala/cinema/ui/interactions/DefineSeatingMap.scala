@@ -22,7 +22,7 @@ case object DefineSeatingMap extends UserInteraction[AppState] {
             (
               updatedState,
               Result(
-                s"A ${cinemaHall.seatingPlan.capacity}-seat seating map has been defined.$LS",
+                s"A ${cinemaHall.seatingMap.capacity}-seat seating map has been defined.$LS",
                 MainMenu
               )
             )
@@ -30,7 +30,7 @@ case object DefineSeatingMap extends UserInteraction[AppState] {
             (
               currentState,
               Result(
-                s"""Invalid input format. Please use: [Rows] [Cols]
+                s"""Invalid input. Please use format: [Rows] [Cols]
                    |Specific error: $errorMessage
                    |""".stripMargin,
                 this

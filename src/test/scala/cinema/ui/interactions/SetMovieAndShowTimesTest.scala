@@ -98,7 +98,7 @@ class SetMovieAndShowTimesTest extends UnitSpec {
 
           newState shouldBe initialState
           result.outputMessage should include(
-            "Invalid input format. Please use:"
+            "Invalid input. Please use:"
           )
           result.interaction.value shouldBe SetMovieAndShowTimes
         }
