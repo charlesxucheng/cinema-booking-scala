@@ -13,15 +13,14 @@ object Row {
     * are positive and cannot exceed a max value (the Row's max number of seats)
     */
   opaque type SeatBlocks = Seq[SeatBlock]
-
-  private val minRowId = 1
   val maxRowId = 702 // A-Z, AA - ZZ, 26 * 26 + 26
+  private val minRowId = 1
 
   def apply(id: Int, seatCount: Int): Row =
     Row.apply(id, rowIdToName(id), seatCount)
 
   def apply(id: Int, name: String, seatCount: Int) =
-    new Row(id, name, seatCount, SeatBlocks.empty)
+    new Row(id, name, seatCount, SeatBlocks.empty, SeatBlocks.empty)
 
   private def rowIdToName(id: Int): String = {
     require(
@@ -120,6 +119,10 @@ object Row {
 
     def map[B](f: Range => B): Seq[B] = seatBlocks.map(f)
 
+    def forall(f: Range => Boolean): Boolean = seatBlocks.forall(f)
+
+    def contains(range: Range): Boolean = seatBlocks.contains(range)
+
     @targetName("append")
     def :+(seatBlock: SeatBlock): SeatBlocks = SeatBlocks(
       seatBlocks :+ seatBlock
@@ -145,7 +148,8 @@ case class Row private (
     id: Int,
     name: String,
     seatCount: Int,
-    bookedSeats: SeatBlocks
+    bookedSeats: SeatBlocks,
+    bookingInProgressSeats: SeatBlocks
 ) {
   require(id > 0, s"Row ID must be greater than zero: $id")
   require(name.length <= 20, s"Row name must not exceed 20 characters: $name")
@@ -157,13 +161,26 @@ case class Row private (
   val midPoint: Float = (seatCount + 1).toFloat / 2
 
   val availableSeats: SeatBlocks =
-    SeatBlocks(Seq(Range.inclusive(1, seatCount))) -- bookedSeats
+    SeatBlocks(
+      Seq(Range.inclusive(1, seatCount))
+    ) -- bookedSeats -- bookingInProgressSeats
 
-  def assignSeats(seatBlocks: SeatBlocks): Row = {
+  def holdSeatsForBooking(seatBlocks: SeatBlocks): Row = {
     require(
-      !isOverlapping(bookedSeats ++ seatBlocks),
-      s"Seats to be booked ($seatBlocks) cannot overlap with seats that are already booked ($bookedSeats)."
+      !isOverlapping(bookedSeats ++ bookingInProgressSeats ++ seatBlocks),
+      s"Seats to be reserved ($seatBlocks) cannot include seats that are already booked ($bookedSeats) or reserved ($bookingInProgressSeats)."
     )
-    this.copy(bookedSeats = bookedSeats ++ seatBlocks)
+    this.copy(bookingInProgressSeats = bookingInProgressSeats ++ seatBlocks)
+  }
+
+  def confirmBooking(seatBlocks: SeatBlocks): Row = {
+    require(
+      seatBlocks.forall(bookingInProgressSeats.contains),
+      s"Cannot find seats to be confirmed ($seatBlocks) in the list of held seats ($bookingInProgressSeats)."
+    )
+    this.copy(
+      bookedSeats = bookedSeats ++ seatBlocks,
+      bookingInProgressSeats = bookingInProgressSeats -- seatBlocks
+    )
   }
 }

@@ -1,12 +1,13 @@
 package cinema
 
+import cinema.Row.SeatBlocks
 import org.scalatest.matchers.should.Matchers.*
 
 class RowTest extends UnitSpec {
 
   "A Row" when {
     "created" should {
-      "have all its seats available" in {
+      "have all its seats available and none are booked" in {
         val testData = Table(
           "Number of Seats",
           10,
@@ -16,6 +17,7 @@ class RowTest extends UnitSpec {
         )
         forAll(testData) { (seatCount: Int) =>
           Row(1, seatCount).availableSeats.seatCount shouldBe seatCount
+          Row(1, seatCount).bookedSeats.seatCount shouldBe 0
         }
       }
     }
@@ -69,6 +71,89 @@ class RowTest extends UnitSpec {
         )
         forAll(testData) { (id: Int, name: String) =>
           Row(id, 20).name shouldBe name
+        }
+      }
+    }
+
+    "some seats are held by a booking" should {
+      "mark them as booking in progress and unavailable" in {
+        val testData = Table(
+          ("Seat Blocks", "Expected Available Seats"),
+          (Seq(Range.inclusive(1, 1)), 19),
+          (Seq(Range.inclusive(1, 5)), 15),
+          (Seq(Range.inclusive(1, 10)), 10),
+          (Seq(Range.inclusive(1, 15)), 5),
+          (Seq(Range.inclusive(1, 20)), 0)
+        )
+
+        forAll(testData) {
+          (seatBlocks: Seq[Row.SeatBlock], expectedAvailableSeats: Int) =>
+            val row = Row(1, 20).holdSeatsForBooking(SeatBlocks(seatBlocks))
+            row.bookingInProgressSeats shouldBe SeatBlocks(seatBlocks)
+            row.availableSeats.seatCount shouldBe expectedAvailableSeats
+        }
+      }
+    }
+
+    "attempting to confirm a booking for seats held" should {
+      "move the seats from held for booking to booked" in {
+        val testData = Table(
+          "Held Seats",
+          Seq(Range.inclusive(3, 6)),
+          Seq(Range.inclusive(1, 5)),
+          Seq(Range.inclusive(9, 9)),
+          Seq(Range.inclusive(1, 20))
+        )
+
+        forAll(testData) { (heldSeats: Seq[Row.SeatBlock]) =>
+          val seatBlocks = SeatBlocks(heldSeats)
+          val row = Row(1, 20)
+            .holdSeatsForBooking(seatBlocks)
+            .confirmBooking(seatBlocks)
+          row.bookedSeats shouldBe seatBlocks
+          row.bookingInProgressSeats shouldBe SeatBlocks.empty
+        }
+      }
+    }
+
+    "attempting to book seats that have not been held previously" should {
+      "fail" in {
+        val testData = Table(
+          ("Seats Held", "Seats To Book"),
+          (Seq(Range.inclusive(3, 6)), Seq(Range.inclusive(8, 11))),
+          (Seq(Range.inclusive(1, 5)), Seq(Range.inclusive(5, 10))),
+          (Seq(Range.inclusive(9, 9)), Seq(Range.inclusive(1, 10))),
+          (Seq(Range.inclusive(1, 20)), Seq(Range.inclusive(8, 10)))
+        )
+
+        forAll(testData) {
+          (seatsHeld: Seq[Row.SeatBlock], seatsToBook: Seq[Row.SeatBlock]) =>
+            val row = Row(1, 20).holdSeatsForBooking(SeatBlocks(seatsHeld))
+            an[IllegalArgumentException] should be thrownBy row.confirmBooking(
+              SeatBlocks(seatsToBook)
+            )
+        }
+      }
+    }
+
+    "attempting to confirm a booking for seats that are already booked" should {
+      "fail" in {
+        val testData = Table(
+          "Seats",
+          Seq(Range.inclusive(3, 6)),
+          Seq(Range.inclusive(1, 5)),
+          Seq(Range.inclusive(9, 9)),
+          Seq(Range.inclusive(1, 20))
+        )
+
+        forAll(testData) { (seats: Seq[Row.SeatBlock]) =>
+          val seatBlocks = SeatBlocks(seats)
+          val row = Row(1, 20)
+            .holdSeatsForBooking(seatBlocks)
+            .confirmBooking(seatBlocks)
+          an[IllegalArgumentException] should be thrownBy row.confirmBooking(
+            seatBlocks
+          )
         }
       }
     }

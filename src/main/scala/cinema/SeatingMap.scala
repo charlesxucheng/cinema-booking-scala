@@ -1,32 +1,36 @@
 package cinema
 
 import cinema.RectangularSeatingMap.{maxCols, maxRows}
+import cinema.SeatingMap.SeatStatus.*
 import cinema.SeatingMapView.{longHeader, shortHeader}
 
 object SeatingMap {
-  private val availableSeatSymbol = "."
-  private val bookedSeatSymbol = "o"
 
   private def convertToStrings(m: SeatingMap): Seq[String] = {
     m.seatsForDisplay.map(r => {
-      val allSeats = r.bookedSeats.map((true, _)) ++ r.availableSeats
-        .map((false, _))
-        .sortBy(x => x._2.start)
+      val allSeats = r.bookedSeats.map((Booked, _)) ++
+        r.bookingInProgressSeats.map((HeldForBooking, _)) ++
+        r.availableSeats
+          .map((Available, _))
+          .sortBy(x => x._2.start)
 
       val seatSpacing =
         " " * Math.max(m.row(1).seatCount.toString.length - 1, 1)
 
       val symbols = allSeats
         .sortBy(x => x._2.start)
-        .map(b =>
-          if (b._1) s"$seatSpacing$bookedSeatSymbol" * b._2.size
-          else s"$seatSpacing$availableSeatSymbol" * b._2.size
-        )
+        .map(b => s"$seatSpacing${b._1.displaySymbol}" * b._2.size)
 
       val maxIdLength = m.seats.map(_.name.length).max
 
       symbols.foldLeft(r.name.padTo(maxIdLength, ' '))(_ + _)
     })
+  }
+
+  enum SeatStatus(val displaySymbol: String) {
+    case Available extends SeatStatus(".")
+    case Booked extends SeatStatus("#")
+    case HeldForBooking extends SeatStatus("o")
   }
 
   given SeatingMapView[SeatingMap] with
@@ -82,19 +86,6 @@ sealed trait SeatingMap {
     updatedRows.foldLeft(seats)((seats, row) => seats.updated(row.id - 1, row))
 
 }
-
-object RectangularSeatingMap {
-  val maxRows = 100
-  val maxCols = 200
-
-  def apply(rows: Int, cols: Int): RectangularSeatingMap =
-    RectangularSeatingMap(
-      rows,
-      cols,
-      (1 to rows).map(rowId => Row(rowId, cols))
-    )
-}
-
 // The rows and columns are both 1-based, with row 1 furthest from the screen, and column 1 being the leftmost seat.
 case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
     extends SeatingMap {
@@ -113,6 +104,7 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
 
   override val availableRows: IndexedSeq[Row] =
     seats.filter(row => row.availableSeats.nonEmpty)
+
   override val seatsForDisplay: IndexedSeq[Row] = seats.reverse
 
   override def capacity: Int = rows * cols
@@ -122,4 +114,16 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
 
   override def bookSeats(bookedSeats: IndexedSeq[Row]): SeatingMap =
     this.copy(seats = updateRows(bookedSeats))
+}
+
+object RectangularSeatingMap {
+  val maxRows = 100
+  val maxCols = 200
+
+  def apply(rows: Int, cols: Int): RectangularSeatingMap =
+    RectangularSeatingMap(
+      rows,
+      cols,
+      (1 to rows).map(rowId => Row(rowId, cols))
+    )
 }

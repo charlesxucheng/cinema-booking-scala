@@ -88,7 +88,7 @@ class SeatingMapViewTest extends UnitSpec {
   }
 
   "A SeatingMap with some bookings" should {
-    "show booked seats as booked" in {
+    "show seats held by a booking as held" in {
       val initialSeatingMap = RectangularSeatingMap(5, 5)
       val allocationResult =
         DefaultSeatAllocationStrategy.allocateSeats(initialSeatingMap, 2)

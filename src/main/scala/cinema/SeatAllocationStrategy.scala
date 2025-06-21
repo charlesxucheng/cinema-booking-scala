@@ -88,7 +88,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
           val allocatedBlocks = Seq(
             AllocatedSeatBlocks(r.id, result.allocatedSeatBlocks)
           )
-          val updatedRow = r.assignSeats(result.allocatedSeatBlocks)
+          val updatedRow = r.holdSeatsForBooking(result.allocatedSeatBlocks)
           allocateSeatsRec(
             rs,
             result.numberOfSeatsToAllocate,
