@@ -3,7 +3,7 @@ package cinema.ui
 import cinema.*
 import cinema.MovieDurations.MovieDuration
 import org.scalatest.Inspectors
-import org.scalatest.matchers.should.Matchers.shouldBe
+import org.scalatest.matchers.should.Matchers.{should, shouldBe}
 
 import java.time.LocalTime
 import scala.concurrent.duration.DurationInt
@@ -26,11 +26,13 @@ class AppStateTest extends UnitSpec {
   "An empty AppState" should {
     "have no movie, cinema hall, screenings, selected showtime and selected number of tickets set" in {
       val emptyState = AppState.empty
-      emptyState.movie shouldBe None
-      emptyState.cinemaHall shouldBe None
-      emptyState.screenings shouldBe Map.empty
-      emptyState.selectedShowTimeId shouldBe None
-      emptyState.selectedNumberOfTickets shouldBe None
+      emptyState should have(
+        Symbol("movie")(None),
+        Symbol("cinemaHall")(None),
+        Symbol("screenings")(Map.empty),
+        Symbol("selectedShowTimeId")(None),
+        Symbol("selectedNumberOfTickets")(None)
+      )
     }
   }
 
@@ -46,8 +48,8 @@ class AppStateTest extends UnitSpec {
     "updated with a movie showtime Id that can be found in its screenings" should {
       "allow the operation" in {
         val appState = testState.setShowTimeAndNumberOfTickets(0, 3)
-        appState.selectedShowTimeId shouldBe Some(0)
-        appState.selectedNumberOfTickets shouldBe Some(3)
+        appState.selectedShowTimeId.get shouldBe 0
+        appState.selectedNumberOfTickets.get shouldBe 3
       }
     }
 
@@ -70,8 +72,8 @@ class AppStateTest extends UnitSpec {
         val appState = testState
         appState.screenings.size shouldBe 2
         appState.screenings.map(_._2.showTime) shouldBe testMovie.showTimes
-        Inspectors.forAll(appState.screenings) { screening =>
-          screening._2.cinemaHall.seatingMap shouldBe testCinemaHall.seatingMap
+        Inspectors.forAll(appState.screenings.values) { screening =>
+          screening.cinemaHall.seatingMap shouldBe testCinemaHall.seatingMap
         }
       }
     }
@@ -87,8 +89,8 @@ class AppStateTest extends UnitSpec {
         appState.movie.get shouldBe movie
         appState.screenings.size shouldBe 3
         appState.screenings.map(_._2.showTime) shouldBe movie.showTimes
-        Inspectors.forAll(appState.screenings) { screening =>
-          screening._2.cinemaHall.seatingMap shouldBe appState.cinemaHall.get.seatingMap
+        Inspectors.forAll(appState.screenings.values) { screening =>
+          screening.cinemaHall.seatingMap shouldBe appState.getCinemaHallSeatingMap.get
         }
       }
     }
@@ -99,8 +101,8 @@ class AppStateTest extends UnitSpec {
         val appState = testState.setCinemaHall(cinemaHall)
         appState.cinemaHall.get shouldBe cinemaHall
         appState.screenings.size shouldBe 2
-        Inspectors.forAll(appState.screenings) { screening =>
-          screening._2.cinemaHall.seatingMap shouldBe appState.cinemaHall.get.seatingMap
+        Inspectors.forAll(appState.screenings.values) { screening =>
+          screening.cinemaHall.seatingMap shouldBe appState.getCinemaHallSeatingMap.get
         }
       }
     }

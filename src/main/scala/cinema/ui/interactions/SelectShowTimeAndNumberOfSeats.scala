@@ -34,7 +34,7 @@ case object SelectShowTimeAndNumberOfSeats extends UserInteraction[AppState] {
 
               val updatedScreening = screening.copy(cinemaHall = CinemaHall(updatedSeatingMap))
 
-              val outgoingState = (
+              (
                 currentState
                   .setShowTimeAndNumberOfTickets(
                     showtimeIndex,
@@ -45,7 +45,6 @@ case object SelectShowTimeAndNumberOfSeats extends UserInteraction[AppState] {
                   ),
                 Result("", ConfirmSeatSelection)
               )
-              outgoingState
             } catch {
               case e: IllegalArgumentException =>
                 (

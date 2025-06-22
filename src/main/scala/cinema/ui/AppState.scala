@@ -1,7 +1,9 @@
 package cinema.ui
 
 import cinema.ui.base.Empty
-import cinema.{CinemaHall, Movie, Screening}
+import cinema.{CinemaHall, Movie, Screening, SeatingMap}
+
+import java.time.LocalTime
 
 case class AppState private (
     movie: Option[Movie],
@@ -51,6 +53,14 @@ case class AppState private (
     selectedShowTimeId = Some(showtimeId),
     selectedNumberOfTickets = Some(numberOfTickets)
   )
+  
+  def getCinemaHallSeatingMap: Option[SeatingMap] = cinemaHall.map(_.seatingMap)
+  
+  def getSeatingMapForSelectedShowTime: Option[SeatingMap] =
+    selectedShowTimeId.flatMap(screenings.get).map(_.cinemaHall.seatingMap)
+    
+  def selectedShowTime: Option[LocalTime] =
+    selectedShowTimeId.flatMap(screenings.get).map(_.showTime)
 }
 
 object AppState {

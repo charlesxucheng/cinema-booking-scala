@@ -40,8 +40,7 @@ class DefineSeatingMapTest extends UnitSpec {
               .run(initialState)
               .value
 
-            val seatingMap = newState.cinemaHall.get.seatingMap
-            seatingMap shouldBe RectangularSeatingMap(expectedRows, expectedCols)
+            newState.cinemaHall.get.seatingMap shouldBe RectangularSeatingMap(expectedRows, expectedCols)
             result.outputMessage should include regex """A \d+\-seat seating map has been defined."""
             result.interaction.value shouldBe MainMenu
         }

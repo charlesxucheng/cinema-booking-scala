@@ -1,7 +1,6 @@
 package cinema
 
 import cinema.Row.SeatBlocks
-import cinema.Row.SeatBlocks.*
 import org.scalatest.matchers.should.Matchers.*
 
 class SeatingMapTest extends UnitSpec {
