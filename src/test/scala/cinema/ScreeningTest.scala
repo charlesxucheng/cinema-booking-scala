@@ -36,7 +36,7 @@ class ScreeningTest extends UnitSpec {
           val movie =
             Movie.create("TestMovie", MovieDuration(duration), showTimes)
           val screening =
-            Screening(movie, CinemaHall(RectangularSeatingMap(10, 10)), index)
+            Screening(movie, RectangularSeatingMap(10, 10), index)
           screening.showTime shouldBe showTimes(index)
         }
       }
@@ -67,7 +67,7 @@ class ScreeningTest extends UnitSpec {
             Movie.create("TestMovie", MovieDuration(duration), showTimes)
           an[IllegalArgumentException] should be thrownBy Screening(
             movie,
-            CinemaHall(RectangularSeatingMap(10, 10)),
+            RectangularSeatingMap(10, 10),
             index
           )
         }

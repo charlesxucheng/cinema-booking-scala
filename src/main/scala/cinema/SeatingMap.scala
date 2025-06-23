@@ -1,6 +1,7 @@
 package cinema
 
 import cinema.RectangularSeatingMap.{maxCols, maxRows}
+import cinema.SeatAllocationStrategy.AllocatedSeatBlocks
 import cinema.SeatingMap.SeatStatus.*
 import cinema.SeatingMapView.{longHeader, shortHeader}
 
@@ -80,7 +81,11 @@ sealed trait SeatingMap {
 
   def availableSeatCount: Int
 
-  def bookSeats(updatedSeats: IndexedSeq[Row]): SeatingMap
+  def holdSeatsForBooking(updatedSeats: IndexedSeq[Row]): SeatingMap
+
+  def confirmSeatsForBooking(
+      allocatedSeats: Seq[AllocatedSeatBlocks]
+  ): SeatingMap
 
   protected def updateRows(updatedRows: Seq[Row]): IndexedSeq[Row] =
     updatedRows.foldLeft(seats)((seats, row) => seats.updated(row.id - 1, row))
@@ -112,8 +117,21 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
   override def availableSeatCount: Int =
     seats.map(_.availableSeats.seatCount).sum
 
-  override def bookSeats(bookedSeats: IndexedSeq[Row]): SeatingMap =
+  override def holdSeatsForBooking(bookedSeats: IndexedSeq[Row]): SeatingMap =
     this.copy(seats = updateRows(bookedSeats))
+
+  override def confirmSeatsForBooking(
+      allocatedSeats: Seq[AllocatedSeatBlocks]
+  ): SeatingMap = {
+    val allocationMap =
+      allocatedSeats.map(row => row.rowId -> row.seatBlocks).toMap
+
+    val updatedSeats = allocationMap.foldLeft(this.seats)((seats, row) => {
+      seats.updated(row._1 - 1, seats(row._1 - 1).confirmBooking(row._2))
+    })
+
+    this.copy(seats = updatedSeats)
+  }
 }
 
 object RectangularSeatingMap {

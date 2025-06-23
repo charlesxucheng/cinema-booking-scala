@@ -1,5 +1,6 @@
 package cinema.ui
 
+import cinema.SeatAllocationStrategy.AllocatedSeatBlocks
 import cinema.ui.base.Empty
 import cinema.{CinemaHall, Movie, Screening, SeatingMap}
 
@@ -9,6 +10,7 @@ case class AppState private (
     movie: Option[Movie],
     cinemaHall: Option[CinemaHall],
     screenings: Map[Int, Screening],
+    seatsHeldForBooking: Option[Seq[AllocatedSeatBlocks]],
     selectedShowTimeId: Option[Int],
     selectedNumberOfTickets: Option[Int]
 ) {
@@ -30,7 +32,7 @@ case class AppState private (
   } yield {
     movie.showTimes.zipWithIndex
       .map { case (showTime, index) =>
-        index -> Screening(movie, cinemaHall.duplicate, index)
+        index -> Screening(movie, cinemaHall.seatingMap, index)
       }
   }).getOrElse(Seq.empty).toMap
 
@@ -46,6 +48,31 @@ case class AppState private (
     this.copy(screenings = updatedScreenings)
   }
 
+  def setHeldSeats(
+      showtimeId: Int,
+      updatedScreening: Screening,
+      seatsHeldForBooking: Seq[AllocatedSeatBlocks]
+  ): AppState = {
+    val updatedScreenings =
+      this.screenings.updated(showtimeId, updatedScreening)
+    this.copy(
+      screenings = updatedScreenings,
+      seatsHeldForBooking = Some(seatsHeldForBooking)
+    )
+  }
+
+  def confirmedBooking(
+      showtimeId: Int,
+      updatedScreening: Screening
+  ): AppState = {
+    val updatedScreenings =
+      this.screenings.updated(showtimeId, updatedScreening)
+    this.copy(
+      screenings = updatedScreenings,
+      seatsHeldForBooking = None
+    )
+  }
+
   def setShowTimeAndNumberOfTickets(
       showtimeId: Int,
       numberOfTickets: Int
@@ -53,18 +80,21 @@ case class AppState private (
     selectedShowTimeId = Some(showtimeId),
     selectedNumberOfTickets = Some(numberOfTickets)
   )
-  
+
   def getCinemaHallSeatingMap: Option[SeatingMap] = cinemaHall.map(_.seatingMap)
-  
+
   def getSeatingMapForSelectedShowTime: Option[SeatingMap] =
-    selectedShowTimeId.flatMap(screenings.get).map(_.cinemaHall.seatingMap)
-    
+    selectedScreening.map(_.cinemaHall.seatingMap)
+
+  def selectedScreening: Option[Screening] =
+    selectedShowTimeId.flatMap(screenings.get)
+
   def selectedShowTime: Option[LocalTime] =
-    selectedShowTimeId.flatMap(screenings.get).map(_.showTime)
+    selectedScreening.map(_.showTime)
 }
 
 object AppState {
-  def empty: AppState = new AppState(None, None, Map.empty, None, None)
+  def empty: AppState = new AppState(None, None, Map.empty, None, None, None)
 
   given Empty[AppState] with
     def empty: AppState = AppState.empty

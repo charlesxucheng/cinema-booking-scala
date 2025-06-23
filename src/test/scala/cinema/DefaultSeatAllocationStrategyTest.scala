@@ -129,7 +129,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
             val seatingMap =
-              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -177,7 +177,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
             )
 
             val seatingMap =
-              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -230,7 +230,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
             val seatingMap =
-              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -279,7 +279,7 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
             val seatingMap =
-              RectangularSeatingMap(rows, cols).bookSeats(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,

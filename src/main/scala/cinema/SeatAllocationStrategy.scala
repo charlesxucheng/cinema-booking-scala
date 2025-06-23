@@ -61,7 +61,7 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
       IndexedSeq.empty
     )
     val allocatedBlocks = result._1
-    val updatedSeatingMap = seatingMap.bookSeats(result._2)
+    val updatedSeatingMap = seatingMap.holdSeatsForBooking(result._2)
 
     AllocationResult(allocatedBlocks, updatedSeatingMap)
   }
