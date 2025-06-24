@@ -48,6 +48,8 @@ object Row {
     s"${digits._1.getOrElse("")}${digits._2}"
   }
 
+  def rowIdToIndex(id: Int): Int = id - 1
+
   private def isOverlapping(ranges: SeatBlocks): Boolean =
     if (ranges.length <= 1)
       false
@@ -65,6 +67,28 @@ object Row {
     }
 
   object SeatBlocks {
+    def empty: SeatBlocks = SeatBlocks(Seq.empty)
+
+    def minus(
+        a: SeatBlocks,
+        b: SeatBlocks
+    ): SeatBlocks = {
+      val setOfB = b.flatMap(_.toSet).toSet
+      val diffs = a.flatMap(_.filterNot(setOfB.contains))
+      val diffRanges = diffs
+        .foldLeft(List[(Int, Int)]()) {
+          case (Nil, i) => (i, i) :: Nil
+          case ((a, b) :: t, i) =>
+            if (b + 1 == i) (a, i) :: t else (i, i) :: (a, b) :: t
+        }
+        .reverse
+      SeatBlocks.of(diffRanges)
+    }
+
+    def of(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(
+      ranges.map(pair => Range.inclusive(pair._1, pair._2))
+    )
+
     def apply(ranges: Seq[SeatBlock]): SeatBlocks = {
       require(
         ranges.forall(range => range.end > 0 && range.start > 0),
@@ -76,37 +100,6 @@ object Row {
       )
 
       ranges.sortWith(_.start <= _.start) // always sort the incoming Ranges
-    }
-
-    def empty: SeatBlocks = SeatBlocks(Seq.empty)
-
-    def of(ranges: Seq[(Int, Int)]): SeatBlocks = SeatBlocks(
-      ranges.map(pair => Range.inclusive(pair._1, pair._2))
-    )
-
-    @tailrec
-    def minusRec(
-        a: SeatBlocks,
-        b: SeatBlocks,
-        accumulatedDiff: SeatBlocks
-    ): SeatBlocks = a.toList match {
-      case Nil =>
-        accumulatedDiff
-      case x :: xs =>
-        b.toList match {
-          case Nil =>
-            accumulatedDiff ++ a
-          case y :: ys =>
-            //            assert(x.contains(y))
-            val diffToAccumulate =
-              if (x.start < y.start) SeatBlocks.of(Seq((x.start, y.start - 1)))
-              else SeatBlocks.empty
-            val diffToPassOn =
-              if (x.end > y.end) SeatBlocks.of(Seq((y.end + 1, x.end)))
-              else SeatBlocks.empty
-
-            minusRec(diffToPassOn, ys, accumulatedDiff ++ diffToAccumulate)
-        }
     }
   }
 
@@ -133,7 +126,7 @@ object Row {
 
     @targetName("diff")
     def --(other: SeatBlocks): SeatBlocks = {
-      val diffResult = SeatBlocks.minusRec(seatBlocks, other, Seq.empty)
+      val diffResult = SeatBlocks.minus(seatBlocks, other)
       assert(seatBlocks.containsEveryElementOf(diffResult))
       assert(diffResult.forall(!other.contains(_)))
       diffResult

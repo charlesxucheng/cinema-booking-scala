@@ -76,7 +76,7 @@ sealed trait SeatingMap {
       rowId >= 0 && rowId <= seats.length,
       s"Row ID must be between 0 and ${seats.length} (inclusive): $rowId"
     )
-    seats(rowId - 1)
+    seats(Row.rowIdToIndex(rowId))
   }
 
   def availableSeatCount: Int
@@ -88,7 +88,7 @@ sealed trait SeatingMap {
   ): SeatingMap
 
   protected def updateRows(updatedRows: Seq[Row]): IndexedSeq[Row] =
-    updatedRows.foldLeft(seats)((seats, row) => seats.updated(row.id - 1, row))
+    updatedRows.foldLeft(seats)((seats, row) => seats.updated(Row.rowIdToIndex(row.id), row))
 
 }
 // The rows and columns are both 1-based, with row 1 furthest from the screen, and column 1 being the leftmost seat.

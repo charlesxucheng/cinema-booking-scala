@@ -75,7 +75,6 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
       allocatedSeatBlocksAcc: Seq[AllocatedSeatBlocks],
       updatedRowsAcc: IndexedSeq[Row]
   ): (Seq[AllocatedSeatBlocks], IndexedSeq[Row]) =
-    // Reverse the row order so last row will be used for allocation first
     rows match {
       case Seq() =>
         assert(numberOfSeatsRequested == 0)
