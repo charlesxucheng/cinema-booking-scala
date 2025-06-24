@@ -11,22 +11,16 @@ class ConfirmSeatSelectionTest extends UnitSpec {
   val numberOfSeats = 4
   val showtimeIndex = 0
   private val testMovie = Movie("TestMovie", TWO_HOURS, LocalTime.of(14, 30))
-  private val seatingMap = DefaultSeatAllocationStrategy
-    .allocateSeats(
-      RectangularSeatingMap(10, 10),
-      numberOfSeats
-    )
-    .updatedSeatingMap
 
-  private val initialstate = AppState.empty
+  private val initialState = AppState.empty
     .setMovie(testMovie)
-    .setCinemaHall(CinemaHall(seatingMap))
+    .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
     .setShowTimeAndNumberOfTickets(showtimeIndex, numberOfSeats)
 
   private val allocationResult =
-    initialstate.screenings(showtimeIndex).holdSeatsForBooking(numberOfSeats)
+    initialState.screenings(showtimeIndex).holdSeatsForBooking(numberOfSeats)
 
-  private val stateWithSeatsHeld = initialstate.setHeldSeats(
+  private val stateWithSeatsHeld = initialState.setHeldSeats(
     showtimeIndex,
     allocationResult._2,
     allocationResult._1
@@ -34,14 +28,14 @@ class ConfirmSeatSelectionTest extends UnitSpec {
 
   "ConfirmSeatSelection user interaction" should {
     "display the show time and number of tickets selected" in {
-      val prompt = ConfirmSeatSelection.getPrompt(initialstate)
+      val prompt = ConfirmSeatSelection.getPrompt(stateWithSeatsHeld)
       prompt should include(
-        s"You chose ${initialstate.selectedNumberOfTickets.get} tickets for the ${initialstate.selectedShowTime.get} showtime."
+        s"You chose ${initialState.selectedNumberOfTickets.get} tickets for the ${initialState.selectedShowTime.get} showtime."
       )
     }
 
     "display the seating map showing selected seats" in {
-      val prompt = ConfirmSeatSelection.getPrompt(initialstate)
+      val prompt = ConfirmSeatSelection.getPrompt(stateWithSeatsHeld)
       prompt should include(". . . o o o o . . .")
     }
   }

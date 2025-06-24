@@ -9,8 +9,8 @@ object CinemaHall {
   val MIN_INTERMISSION_DURATION: MovieDuration = MovieDuration(30.minutes)
   val DEFAULT_NAME: String = "default"
 
-  def apply(name: String, seatingPlan: SeatingMap): CinemaHall =
-    CinemaHall(name, MIN_INTERMISSION_DURATION, seatingPlan)
+  def apply(name: String, seatingMap: SeatingMap): CinemaHall =
+    CinemaHall(name, MIN_INTERMISSION_DURATION, seatingMap)
   def apply(seatingMap: SeatingMap): CinemaHall =
     CinemaHall(DEFAULT_NAME, MIN_INTERMISSION_DURATION, seatingMap)
 }
