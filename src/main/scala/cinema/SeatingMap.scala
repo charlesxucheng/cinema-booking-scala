@@ -80,6 +80,9 @@ sealed trait SeatingMap {
     seats(Row.rowIdToIndex(rowId))
   }
 
+  def getRowIdByName(name: String): Option[Int] =
+    seats.find(_.name.equalsIgnoreCase(name)).map(_.id)
+
   def availableSeatCount: Int
 
   def holdSeatsForBooking(updatedSeats: IndexedSeq[Row]): SeatingMap
