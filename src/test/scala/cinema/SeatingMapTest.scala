@@ -1,6 +1,7 @@
 package cinema
 
 import cinema.Row.SeatBlocks
+import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers.*
 
 class SeatingMapTest extends UnitSpec {
@@ -59,6 +60,46 @@ class SeatingMapTest extends UnitSpec {
         forAll(tableData) { (rows: Int, cols: Int) =>
           val seatingMap = RectangularSeatingMap(rows, cols)
           seatingMap.availableSeatCount shouldBe seatingMap.capacity
+        }
+      }
+    }
+
+    "Some seats are held for booking" should {
+      "save the original map without the held seats" in {
+        val validRows = Gen.choose(1, RectangularSeatingMap.maxRows)
+        val validCols = Gen.choose(1, RectangularSeatingMap.maxCols)
+
+        forAll(validRows, validCols) { (rows, cols) =>
+          {
+            val initialSeatingMap = RectangularSeatingMap(rows, cols)
+            DefaultSeatAllocationStrategy
+              .allocateSeats(
+                initialSeatingMap,
+                Math.min(2, initialSeatingMap.availableSeatCount)
+              )
+              .updatedSeatingMap
+              .seatingMapBeforeHold shouldBe Some(initialSeatingMap)
+          }
+        }
+      }
+    }
+    
+    "The held seats are confirmed" should {
+      "discard the original map" in {
+        val validRows = Gen.choose(1, RectangularSeatingMap.maxRows)
+        val validCols = Gen.choose(1, RectangularSeatingMap.maxCols)
+
+        forAll(validRows, validCols) { (rows, cols) => {
+          val allocationResult = DefaultSeatAllocationStrategy
+            .allocateSeats(
+              RectangularSeatingMap(rows, cols),
+              Math.min(2, RectangularSeatingMap(rows, cols).availableSeatCount)
+            )
+          val allocatedSeats = allocationResult.allocatedSeats
+          val seatingMap = allocationResult.updatedSeatingMap
+
+          seatingMap.confirmSeatsForBooking(allocatedSeats).seatingMapBeforeHold shouldBe None
+        }
         }
       }
     }

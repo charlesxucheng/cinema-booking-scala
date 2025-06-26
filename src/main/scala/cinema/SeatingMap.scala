@@ -68,6 +68,7 @@ sealed trait SeatingMap {
   val seats: IndexedSeq[Row]
   val seatsForDisplay: IndexedSeq[Row]
   val availableRows: IndexedSeq[Row]
+  val seatingMapBeforeHold: Option[SeatingMap]
 
   def capacity: Int
 
@@ -88,12 +89,18 @@ sealed trait SeatingMap {
   ): SeatingMap
 
   protected def updateRows(updatedRows: Seq[Row]): IndexedSeq[Row] =
-    updatedRows.foldLeft(seats)((seats, row) => seats.updated(Row.rowIdToIndex(row.id), row))
+    updatedRows.foldLeft(seats)((seats, row) =>
+      seats.updated(Row.rowIdToIndex(row.id), row)
+    )
 
 }
 // The rows and columns are both 1-based, with row 1 furthest from the screen, and column 1 being the leftmost seat.
-case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
-    extends SeatingMap {
+case class RectangularSeatingMap(
+    rows: Int,
+    cols: Int,
+    seats: IndexedSeq[Row],
+    seatingMapBeforeHold: Option[SeatingMap]
+) extends SeatingMap {
   require(
     rows > 0 && rows <= maxRows,
     s"Number of rows must be greater than zero and less than or equal to $maxRows: $rows"
@@ -117,8 +124,15 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
   override def availableSeatCount: Int =
     seats.map(_.availableSeats.seatCount).sum
 
-  override def holdSeatsForBooking(bookedSeats: IndexedSeq[Row]): SeatingMap =
-    this.copy(seats = updateRows(bookedSeats))
+  override def holdSeatsForBooking(bookedSeats: IndexedSeq[Row]): SeatingMap = {
+    val baseSeatingMap = seatingMapBeforeHold.getOrElse(this)
+    assert(baseSeatingMap.seatingMapBeforeHold.isEmpty)
+
+    this.copy(
+      seats = updateRows(bookedSeats),
+      seatingMapBeforeHold = Some(baseSeatingMap)
+    )
+  }
 
   override def confirmSeatsForBooking(
       allocatedSeats: Seq[AllocatedSeatBlocks]
@@ -130,7 +144,7 @@ case class RectangularSeatingMap(rows: Int, cols: Int, seats: IndexedSeq[Row])
       seats.updated(row._1 - 1, seats(row._1 - 1).confirmBooking(row._2))
     })
 
-    this.copy(seats = updatedSeats)
+    this.copy(seats = updatedSeats, seatingMapBeforeHold = None)
   }
 }
 
@@ -142,6 +156,7 @@ object RectangularSeatingMap {
     RectangularSeatingMap(
       rows,
       cols,
-      (1 to rows).map(rowId => Row(rowId, cols))
+      (1 to rows).map(rowId => Row(rowId, cols)),
+      None
     )
 }
