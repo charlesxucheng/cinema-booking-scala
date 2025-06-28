@@ -129,7 +129,9 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
             val seatingMap =
-              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(
+                rowsAllocated
+              )
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -177,7 +179,9 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
             )
 
             val seatingMap =
-              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(
+                rowsAllocated
+              )
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -230,7 +234,9 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
             val seatingMap =
-              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(
+                rowsAllocated
+              )
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -279,7 +285,9 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
             val seatingMap =
-              RectangularSeatingMap(rows, cols).holdSeatsForBooking(rowsAllocated)
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(
+                rowsAllocated
+              )
 
             val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
               seatingMap,
@@ -290,6 +298,190 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               .zip(allocatedSeatNumbers.map(SeatBlocks.of))
               .map(p => AllocatedSeatBlocks(p._1, p._2))
             allocationResult._1 shouldBe expectedBlocks
+        }
+      }
+    }
+
+    "given a number of seats requested form a starting position of an empty row that can accommodate the requested number" should {
+      "allocate from that position" in {
+        val testData = Table(
+          (
+            "Number Of Seats To Allocate",
+            "Starting Row ID",
+            "Starting Column ID",
+            "Expected Seat Allocation"
+          ),
+          (5, 4, 4, Seq((4, 8))),
+          (1, 1, 1, Seq((1, 1))),
+          (10, 2, 1, Seq((1, 10))),
+          (2, 3, 4, Seq((4, 5))),
+          (1, 1, 10, Seq((10, 10)))
+        )
+        forAll(testData) {
+          (
+              numberOfSeatsRequested: Int,
+              startingRowId: Int,
+              startingColId: Int,
+              expectedSeatAllocation: Seq[(Int, Int)]
+          ) =>
+            val seatingMap = RectangularSeatingMap(10, 10)
+            val result = DefaultSeatAllocationStrategy.allocateSeats(
+              seatingMap,
+              numberOfSeatsRequested,
+              startingRowId,
+              startingColId
+            )
+            result.allocatedSeats shouldBe Seq(
+              AllocatedSeatBlocks(
+                startingRowId,
+                SeatBlocks.of(expectedSeatAllocation)
+              )
+            )
+        }
+      }
+    }
+
+    "given a number of seats requested and a starting position of an empty row that cannot accommodate the requested number" should {
+      "allocate seats from that row and the row(s) before the starting row" in {
+        val testData = Table(
+          (
+            "Number Of Seats To Allocate",
+            "Starting Row ID",
+            "Starting Column ID",
+            "Expected Seat Allocation in Starting Row",
+            "Expected Seat Allocation in the Row Before Starting Row"
+          ),
+          (10, 4, 4, Seq((4, 10)), Seq((5, 7))),
+          (20, 1, 1, Seq((1, 10)), Seq((1, 10))),
+          (15, 2, 2, Seq((2, 10)), Seq((3, 8)))
+        )
+
+        forAll(testData) {
+          (
+              numberOfSeatsRequested: Int,
+              startingRowId: Int,
+              startingColId: Int,
+              expectedSeatAllocationInStartingRow: Seq[(Int, Int)],
+              expectedSeatAllocationInRowBeforeStartingRow: Seq[(Int, Int)]
+          ) =>
+            val seatingMap = RectangularSeatingMap(10, 10)
+            val result = DefaultSeatAllocationStrategy.allocateSeats(
+              seatingMap,
+              numberOfSeatsRequested,
+              startingRowId,
+              startingColId
+            )
+            result.allocatedSeats shouldBe Seq(
+              AllocatedSeatBlocks(
+                startingRowId,
+                SeatBlocks.of(expectedSeatAllocationInStartingRow)
+              ),
+              AllocatedSeatBlocks(
+                startingRowId + 1,
+                SeatBlocks.of(expectedSeatAllocationInRowBeforeStartingRow)
+              )
+            )
+        }
+      }
+    }
+
+    "given a number of seats requested and a starting position with some seats to the right of the starting position are already allocated but enough seats are available" should {
+      "allocate from the starting position successfully" in {
+        val testData = Table(
+          (
+            "Rows",
+            "Cols",
+            "Starting Row ID",
+            "Starting Column ID",
+            "Number Of Seats To Allocate",
+            "Existing Allocation",
+            "Expected Seat Allocation"
+          ),
+          (10, 20, 5, 2, 5, Seq((8, 11), (14, 17)), Seq((2, 6))),
+          (10, 20, 2, 2, 4, Seq((6, 20)), Seq((2, 5))),
+          (1, 10, 1, 1, 8, Seq((10, 10)), Seq((1, 8))),
+          (1, 10, 1, 1, 8, Seq((9, 10)), Seq((1, 8))),
+          (1, 20, 1, 4, 3, Seq((7, 9), (11, 14), (15, 20)), Seq((4, 6)))
+        )
+
+        forAll(testData) {
+          (
+              rows: Int,
+              cols: Int,
+              startingRowId: Int,
+              startingColId: Int,
+              numberToAllocate: Int,
+              existingAllocation: Seq[(Int, Int)],
+              allocatedSeats: Seq[(Int, Int)]
+          ) =>
+            val rowsAllocated = IndexedSeq(
+              Row(startingRowId, cols).holdSeatsForBooking(
+                SeatBlocks.of(existingAllocation)
+              )
+            )
+            val seatingMap =
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(
+                rowsAllocated
+              )
+
+            val allocationResult = DefaultSeatAllocationStrategy.allocateSeats(
+              seatingMap,
+              numberToAllocate,
+              startingRowId,
+              startingColId
+            )
+
+            allocationResult.allocatedSeats shouldBe Seq(
+              AllocatedSeatBlocks(startingRowId, SeatBlocks.of(allocatedSeats))
+            )
+        }
+      }
+    }
+
+    "given a number of seats requested and a starting position with some seats to the right of the starting position are already allocated but not enough seats are available" should {
+      "fail to allocate seats" in {
+        val testData = Table(
+          (
+            "Rows",
+            "Cols",
+            "Starting Row ID",
+            "Starting Column ID",
+            "Number Of Seats To Allocate",
+            "Existing Allocation"
+          ),
+          (10, 20, 5, 2, 10, Seq((8, 11), (14, 17))),
+          (10, 20, 2, 2, 5, Seq((6, 20))),
+          (1, 10, 1, 1, 8, Seq((7, 10))),
+          (1, 20, 1, 4, 12, Seq((11, 14), (15, 20)))
+        )
+
+        forAll(testData) {
+          (
+              rows: Int,
+              cols: Int,
+              startingRowId: Int,
+              startingColId: Int,
+              numberToAllocate: Int,
+              existingAllocation: Seq[(Int, Int)]
+          ) =>
+            val rowsAllocated = IndexedSeq(
+              Row(startingRowId, cols).holdSeatsForBooking(
+                SeatBlocks.of(existingAllocation)
+              )
+            )
+            val seatingMap =
+              RectangularSeatingMap(rows, cols).holdSeatsForBooking(
+                rowsAllocated
+              )
+
+            an[IllegalArgumentException] should be thrownBy {
+              DefaultSeatAllocationStrategy.allocateSeats(
+                seatingMap,
+                numberToAllocate,
+                startingRowId,
+                startingColId
+              )
+            }
         }
       }
     }

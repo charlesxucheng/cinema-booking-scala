@@ -1,6 +1,8 @@
 package cinema.ui.interactions
 
 import cinema.*
+import cinema.Row.SeatBlocks
+import cinema.SeatAllocationStrategy.AllocatedSeatBlocks
 import cinema.TestFixtures.TWO_HOURS
 import cinema.ui.AppState
 import org.scalatest.matchers.should.Matchers.*
@@ -55,4 +57,39 @@ class ConfirmSeatSelectionTest extends UnitSpec {
     }
   }
 
+  "user enter a seat number to change seat selection" should {
+    "change the selected seat and remain in the same user interaction" in {
+      val result = ConfirmSeatSelection
+        .handleInput("B2")
+        .run(stateWithSeatsHeld)
+        .value
+      result._1.seatsHeldForBooking.get.head shouldBe AllocatedSeatBlocks(
+        2,
+        SeatBlocks.of(Seq((2, 5)))
+      )
+      result._2.interaction.value shouldBe ConfirmSeatSelection
+    }
+  }
+
+  "user enter an invalid input" should {
+    "display error message and remain in the same user interaction" in {
+      val result = ConfirmSeatSelection
+        .handleInput("invalid input")
+        .run(stateWithSeatsHeld)
+        .value
+      result._1 shouldBe stateWithSeatsHeld
+      result._2.interaction.value shouldBe ConfirmSeatSelection
+    }
+  }
+
+  "user's change starting seat request cannot be fulfilled" should {
+    "display error message and remain in the same user interaction" in {
+      val result = ConfirmSeatSelection
+        .handleInput("B99")
+        .run(stateWithSeatsHeld)
+        .value
+      result._1 shouldBe stateWithSeatsHeld
+      result._2.interaction.value shouldBe ConfirmSeatSelection
+    }
+  }
 }

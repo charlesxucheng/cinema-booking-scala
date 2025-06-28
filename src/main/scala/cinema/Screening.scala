@@ -33,6 +33,24 @@ case class Screening(movie: Movie, cinemaHall: CinemaHall, showTimeIndex: Int) {
     )
   }
 
+  def holdSeatsForBooking(
+      numOfSeats: Int,
+      startingRow: Int,
+      startingCol: Int
+  ): (Seq[AllocatedSeatBlocks], Screening) = {
+    val allocationResult = allocationStrategy.allocateSeats(
+      seatingMap,
+      numOfSeats,
+      startingRow,
+      startingCol
+    )
+    val updatedSeatingMap = allocationResult.updatedSeatingMap
+    (
+      allocationResult.allocatedSeats,
+      Screening(movie, allocationResult.updatedSeatingMap, showTimeIndex)
+    )
+  }
+
   def confirmBooking(allocatedSeats: Seq[AllocatedSeatBlocks]): Screening = {
     val updatedSeatingMap = seatingMap.confirmSeatsForBooking(allocatedSeats)
     this.copy(cinemaHall = CinemaHall(updatedSeatingMap))

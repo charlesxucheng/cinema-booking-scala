@@ -35,15 +35,21 @@ trait SeatAllocationStrategy {
       seatingMap: SeatingMap,
       numberOfSeatsRequested: Int
   ): AllocationResult
-  //  def allocateSeats(seatingMap: SeatingMap, numberOfSeatsRequested: Int, startingPosition: (Int, Int)): AllocationResult
+
+  def allocateSeats(
+      seatingMap: SeatingMap,
+      numberOfSeatsRequested: Int,
+      startingRowId: Int,
+      startingColId: Int
+  ): AllocationResult
 }
 
 object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
 
-  override def allocateSeats(
+  private def validateNumberOfSeatsRequested(
       seatingMap: SeatingMap,
       numberOfSeatsRequested: Int
-  ): AllocationResult = {
+  ): Unit = {
     require(
       numberOfSeatsRequested > 0,
       s"Number of seats requested ($numberOfSeatsRequested) must be greater than 0."
@@ -52,6 +58,13 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
       numberOfSeatsRequested <= seatingMap.availableSeatCount,
       s"Number of requested seats ($numberOfSeatsRequested) cannot be greater than the available seat count (${seatingMap.availableSeatCount})."
     )
+  }
+
+  override def allocateSeats(
+      seatingMap: SeatingMap,
+      numberOfSeatsRequested: Int
+  ): AllocationResult = {
+    validateNumberOfSeatsRequested(seatingMap, numberOfSeatsRequested)
 
     val rowsToProcess = seatingMap.availableRows
     val result = allocateSeatsRec(
@@ -66,6 +79,83 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
     AllocationResult(allocatedBlocks, updatedSeatingMap)
   }
 
+  override def allocateSeats(
+      seatingMap: SeatingMap,
+      numberOfSeatsRequested: Int,
+      startingRowId: Int,
+      startingColId: Int
+  ): AllocationResult = {
+    validateNumberOfSeatsRequested(seatingMap, numberOfSeatsRequested)
+
+    // Allocate seats in the first row based on startingPosition
+    val seatsAllocatedInTheStartingRow = allocateSeatsFromStartingPosition(
+      seatingMap,
+      numberOfSeatsRequested,
+      startingRowId,
+      startingColId
+    )
+
+    // Allocate the rest as per usual
+    val rowsToProcess = seatingMap.availableRows.filter(_.id > startingRowId)
+    val firstRowAllocationResult = allocateSeatsRec(
+      rowsToProcess,
+      numberOfSeatsRequested - seatsAllocatedInTheStartingRow._1.seatBlocks.seatCount,
+      Seq.empty,
+      IndexedSeq.empty
+    )
+
+    // Put the two allocation results together
+    val combinedAllocatedSeatBlocks =
+      seatsAllocatedInTheStartingRow._1 +: firstRowAllocationResult._1
+    val updatedRows =
+      firstRowAllocationResult._2 :+ seatsAllocatedInTheStartingRow._2
+
+    val updatedSeatingMap = seatingMap.holdSeatsForBooking(updatedRows)
+
+    AllocationResult(combinedAllocatedSeatBlocks, updatedSeatingMap)
+  }
+
+  private def allocateSeatsFromStartingPosition(
+      seatingMap: SeatingMap,
+      numberOfSeatsRequested: Int,
+      startingRowId: Int,
+      startingColId: Int
+  ): (AllocatedSeatBlocks, Row) = {
+    try {
+      val startingRow = seatingMap.row(startingRowId)
+      val numberOfSeatsToAllocate =
+        Math.min(
+          numberOfSeatsRequested,
+          startingRow.seatCount - (startingColId - 1)
+        )
+
+      val seatsToAllocate =
+        Range.inclusive(
+          startingColId,
+          startingColId + numberOfSeatsToAllocate - 1
+        )
+
+      val allocatedSeatBlocks =
+        AllocatedSeatBlocks(
+          startingRowId,
+          SeatBlocks.of(
+            Seq((startingColId, startingColId + numberOfSeatsToAllocate - 1))
+          )
+        )
+
+      (
+        allocatedSeatBlocks,
+        startingRow.holdSeatsForBooking(allocatedSeatBlocks.seatBlocks)
+      )
+    } catch {
+      case e: IllegalArgumentException => {
+        throw new IllegalArgumentException(
+          s"Cannot allocate $numberOfSeatsRequested seats from starting position as there are already booked seats to the right of the position. Please try again."
+        )
+      }
+    }
+  }
+
   import PositionToRefPoint.*
 
   @tailrec
@@ -77,7 +167,10 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
   ): (Seq[AllocatedSeatBlocks], IndexedSeq[Row]) =
     rows match {
       case Seq() =>
-        assert(numberOfSeatsRequested == 0)
+        require(
+          numberOfSeatsRequested == 0,
+          "Not enough seats available for booking."
+        )
         (allocatedSeatBlocksAcc, updatedRowsAcc)
       case r +: rs =>
         if (numberOfSeatsRequested == 0)
@@ -245,8 +338,6 @@ object DefaultSeatAllocationStrategy extends SeatAllocationStrategy {
     // The ordinal values are used in sorting
     case COVERS, RIGHT, LEFT
   }
-
-  //  override def allocateSeats(seatingMap: SeatingMap, numberOfSeatsRequested: Int, startingPosition: (Int, Int)): AllocationResult = ???
 
   //  private def allocateSeats(seatingMap: SeatingMap, numberOfSeatsRequested: Int, allocatedSeats: Seq)
 
