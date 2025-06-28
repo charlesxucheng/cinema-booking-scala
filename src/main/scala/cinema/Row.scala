@@ -19,7 +19,7 @@ object Row {
   def apply(id: Int, seatCount: Int): Row =
     Row.apply(id, rowIdToName(id), seatCount)
 
-  def apply(id: Int, name: String, seatCount: Int) =
+  def apply(id: Int, name: String, seatCount: Int): Row =
     new Row(id, name, seatCount, SeatBlocks.empty, SeatBlocks.empty)
 
   private def rowIdToName(id: Int): String = {
@@ -58,12 +58,6 @@ object Row {
       sorted
         .zip(sorted.tail)
         .exists(pairOfRanges => pairOfRanges._1.end >= pairOfRanges._2.start)
-    }
-
-  extension (seatBlock: SeatBlock)
-    def of(from: Int, to: Int): SeatBlock = {
-      require(from > 0 && to > 0, "Both from and to must be greater than 0")
-      Range.inclusive(from, to)
     }
 
   object SeatBlocks {
