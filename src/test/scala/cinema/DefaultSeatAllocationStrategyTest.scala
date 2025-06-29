@@ -112,7 +112,29 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
           (10, 20, Seq((10, 14)), 6, Seq((4, 9)), Seq((1, 3), (15, 20))),
           (1, 11, Seq((6, 6)), 3, Seq((7, 9)), Seq((1, 5), (10, 11))),
           (1, 13, Seq((1, 3)), 8, Seq((4, 11)), Seq((12, 13))),
-          (1, 12, Seq((4, 12)), 2, Seq((2, 3)), Seq((1, 1)))
+          (1, 12, Seq((4, 12)), 2, Seq((2, 3)), Seq((1, 1))),
+          (2, 9, Seq((1, 1)), 4, Seq((4, 7)), Seq((2, 3), (8, 9))),
+          (2, 9, Seq((1, 2)), 4, Seq((4, 7)), Seq((3, 3), (8, 9))),
+          (2, 9, Seq((1, 3)), 4, Seq((4, 7)), Seq((8, 9))),
+          (2, 9, Seq((1, 4)), 4, Seq((5, 8)), Seq((9, 9))),
+          (2, 9, Seq((1, 5)), 4, Seq((6, 9)), Seq.empty),
+          (2, 9, Seq((9, 9)), 4, Seq((4, 7)), Seq((1, 3), (8, 8))),
+          (2, 9, Seq((8, 9)), 4, Seq((4, 7)), Seq((1, 3))),
+          (2, 9, Seq((7, 9)), 4, Seq((3, 6)), Seq((1, 2))),
+          (2, 9, Seq((6, 9)), 4, Seq((2, 5)), Seq((1, 1))),
+          (2, 9, Seq((5, 9)), 4, Seq((1, 4)), Seq.empty),
+          (2, 10, Seq((1, 1)), 4, Seq((4, 7)), Seq((2, 3), (8, 10))),
+          (2, 10, Seq((1, 2)), 4, Seq((4, 7)), Seq((3, 3), (8, 10))),
+          (2, 10, Seq((1, 3)), 4, Seq((4, 7)), Seq((8, 10))),
+          (2, 10, Seq((1, 4)), 4, Seq((5, 8)), Seq((9, 10))),
+          (2, 10, Seq((1, 5)), 4, Seq((6, 9)), Seq((10, 10))),
+          (2, 10, Seq((1, 6)), 4, Seq((7, 10)), Seq.empty),
+          (2, 10, Seq((10, 10)), 4, Seq((4, 7)), Seq((1, 3), (8, 9))),
+          (2, 10, Seq((9, 10)), 4, Seq((4, 7)), Seq((1, 3), (8, 8))),
+          (2, 10, Seq((8, 10)), 4, Seq((4, 7)), Seq((1, 3))),
+          (2, 10, Seq((7, 10)), 4, Seq((3, 6)), Seq((1, 2))),
+          (2, 10, Seq((6, 10)), 4, Seq((2, 5)), Seq((1, 1))),
+          (2, 10, Seq((5, 10)), 4, Seq((1, 4)), Seq.empty)
         )
         forAll(testData) {
           (
@@ -338,6 +360,18 @@ class DefaultSeatAllocationStrategyTest extends UnitSpec {
               )
             )
         }
+      }
+    }
+
+    "given a number of seats requested form a starting position such that there are no enough seats from the starting position" should {
+      "fail to allocate" in {
+        val seatingMap = RectangularSeatingMap(10, 10)
+        val result = intercept[IllegalArgumentException] {
+          DefaultSeatAllocationStrategy.allocateSeats(seatingMap, 20, 9, 5)
+        }
+        result.getMessage should include(
+          "Not enough seats available for booking."
+        )
       }
     }
 
