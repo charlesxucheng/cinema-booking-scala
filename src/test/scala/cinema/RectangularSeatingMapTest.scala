@@ -43,6 +43,17 @@ class RectangularSeatingMapTest extends UnitSpec {
         )
       }
     }
+
+    "return a row given a valid row ID" in {
+      val seatingMap = RectangularSeatingMap(5, 5)
+      seatingMap.row(1) shouldBe Row(1, 5)
+    }
+
+    "return an error if an invalid row ID is given" in {
+      val seatingMap = RectangularSeatingMap(5, 5)
+      an[IllegalArgumentException] should be thrownBy seatingMap.row(0)
+      an[IllegalArgumentException] should be thrownBy seatingMap.row(6)
+    }
   }
 
   it when {

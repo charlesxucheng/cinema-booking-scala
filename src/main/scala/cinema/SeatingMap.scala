@@ -74,7 +74,7 @@ sealed trait SeatingMap {
 
   def row(rowId: Int): Row = {
     require(
-      rowId >= 0 && rowId <= seats.length,
+      rowId > 0 && rowId <= seats.length,
       s"Row ID must be between 0 and ${seats.length} (inclusive): $rowId"
     )
     seats(Row.rowIdToIndex(rowId))
@@ -98,7 +98,7 @@ sealed trait SeatingMap {
 
 }
 // The rows and columns are both 1-based, with row 1 furthest from the screen, and column 1 being the leftmost seat.
-case class RectangularSeatingMap(
+case class RectangularSeatingMap private(
     rows: Int,
     cols: Int,
     seats: IndexedSeq[Row],
@@ -129,7 +129,7 @@ case class RectangularSeatingMap(
 
   override def holdSeatsForBooking(bookedSeats: IndexedSeq[Row]): SeatingMap = {
     val baseSeatingMap = seatingMapBeforeHold.getOrElse(this)
-    assert(baseSeatingMap.seatingMapBeforeHold.isEmpty)
+    require(baseSeatingMap.seatingMapBeforeHold.isEmpty)
 
     this.copy(
       seats = updateRows(bookedSeats),
