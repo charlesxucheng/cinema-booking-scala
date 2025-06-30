@@ -14,7 +14,7 @@ object Row {
     */
   opaque type SeatBlocks = Seq[SeatBlock]
   val maxRowId = 702 // A-Z, AA - ZZ, 26 * 26 + 26
-  private val minRowId = 1
+  val minRowId = 1
 
   def apply(id: Int, seatCount: Int): Row =
     Row.apply(id, rowIdToName(id), seatCount)

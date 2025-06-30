@@ -35,6 +35,30 @@ class RowTest extends UnitSpec {
         }
       }
     }
+
+    "given an row Id that is out of the allowed range" should {
+      "not be created" in {
+        val testData = Table(
+          "Row ID",
+          -1,
+          0,
+          Row.minRowId - 1,
+          Row.maxRowId + 1,
+          Int.MaxValue,
+          Int.MinValue
+        )
+        forAll(testData) { (rowId: Int) =>
+          an[IllegalArgumentException] should be thrownBy Row(rowId, 10)
+        }
+      }
+
+      "given a row name that is more than allowed length" should {
+        "not be created" in {
+            an[IllegalArgumentException] should be thrownBy Row(1, "A" * 21, 10)
+        }
+      }
+    }
+
     "have an odd number of seats" should {
       "have a middle point that is between the center two seats" in {
         val testData = Table(
@@ -112,6 +136,26 @@ class RowTest extends UnitSpec {
             .confirmBooking(seatBlocks)
           row.bookedSeats shouldBe seatBlocks
           row.bookingInProgressSeats shouldBe SeatBlocks.empty
+        }
+      }
+    }
+
+    "attempt to book seats that are already booked" should {
+      "fail" in {
+        val testData = Table(
+          ("Already Booked Seats", "Seats To Book"),
+          (Seq(Range.inclusive(3, 6)), Seq(Range.inclusive(3, 6))),
+          (Seq(Range.inclusive(1, 5)), Seq(Range.inclusive(2, 5))),
+          (Seq(Range.inclusive(4, 9)), Seq(Range.inclusive(9, 10))),
+          (Seq(Range.inclusive(15, 20)), Seq(Range.inclusive(10, 17))),
+          (Seq(Range.inclusive(1, 5)), Seq(Range.inclusive(1, 4))),
+        )
+
+        forAll(testData) { (bookedSeats: Seq[Row.SeatBlock], toBook: Seq[Row.SeatBlock]) =>
+          val row = Row(1, 20).holdSeatsForBooking(SeatBlocks(bookedSeats))
+          an[IllegalArgumentException] should be thrownBy row.holdSeatsForBooking(
+            SeatBlocks(toBook)
+          )
         }
       }
     }
