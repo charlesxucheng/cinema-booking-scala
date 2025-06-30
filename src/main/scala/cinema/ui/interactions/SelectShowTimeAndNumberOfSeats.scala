@@ -99,7 +99,7 @@ case object SelectShowTimeAndNumberOfSeats extends UserInteraction[AppState] {
          |Select show time:
          |$showTimesList
          |Enter selected showtime and number of tickets in [showtime id] [# of tickets] format, or press Enter to return to main menu:
-    """.stripMargin
+         |""".stripMargin
     }
   }
 }

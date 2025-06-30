@@ -50,7 +50,12 @@ case object ConfirmSeatSelection extends UserInteraction[AppState] {
           parseInput(input, screening) match {
             case Right((rowId, colId)) =>
               val updatedScreening =
-                screening.holdSeatsForBooking(numberOfTickets, rowId, colId)
+                screening.holdSUserSpecifiedSeatsForBooking(
+                  numberOfTickets,
+                  rowId,
+                  colId,
+                  seatsHeldForBooking
+                )
               (
                 currentState.setHeldSeats(
                   showtimeId,

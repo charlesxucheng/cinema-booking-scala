@@ -71,6 +71,28 @@ class ConfirmSeatSelectionTest extends UnitSpec {
     }
   }
 
+  "user hit enter without other input after changing seat selection explicitly" should {
+    "confirm the booking with the seats selected and return to main menu" in {
+      val step1Result = ConfirmSeatSelection
+        .handleInput("B2")
+        .run(stateWithSeatsHeld)
+        .value
+
+      val step2Result = step1Result._2.interaction.value
+        .handleInput("")
+        .run(step1Result._1)
+        .value
+
+      val resultSeatingMap = step2Result._1.getSeatingMapForSelectedShowTime
+      resultSeatingMap.map(_.availableSeatCount).get shouldBe 96
+      resultSeatingMap.map(
+        _.row(1).availableSeats shouldBe SeatBlocks.of(Seq((1, 10)))
+      )
+
+      step2Result._2.interaction.value shouldBe MainMenu
+    }
+  }
+
   "user enter an invalid input" should {
     "display error message and remain in the same user interaction" in {
       val result = ConfirmSeatSelection

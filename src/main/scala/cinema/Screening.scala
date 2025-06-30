@@ -33,13 +33,16 @@ case class Screening(movie: Movie, cinemaHall: CinemaHall, showTimeIndex: Int) {
     )
   }
 
-  def holdSeatsForBooking(
+  def holdSUserSpecifiedSeatsForBooking(
       numOfSeats: Int,
       startingRow: Int,
-      startingCol: Int
+      startingCol: Int,
+      seatsHeldForBooking: Seq[AllocatedSeatBlocks]
   ): (Seq[AllocatedSeatBlocks], Screening) = {
+    assert(seatingMap.seatingMapBeforeHold.nonEmpty)
+
     val allocationResult = allocationStrategy.allocateSeats(
-      seatingMap,
+      seatingMap.seatingMapBeforeHold.get,
       numOfSeats,
       startingRow,
       startingCol
