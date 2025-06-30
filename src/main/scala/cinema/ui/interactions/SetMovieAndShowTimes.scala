@@ -62,20 +62,13 @@ case object SetMovieAndShowTimes extends UserInteraction[AppState] {
 
         val showTimes = tokens
           .drop(durationIndex + 1)
-          .flatMap { timeStr =>
-            try {
-              Some(LocalTime.parse(timeStr, timeFormatter))
-            } catch {
-              case _: DateTimeParseException =>
-                logger.warn(s"Invalid time format: $timeStr")
-                None
-            }
-          }
+          .flatMap(timeStr => Some(LocalTime.parse(timeStr, timeFormatter)))
           .toList
 
         Right(Movie.create(movieTitle, MovieDuration(movieDuration), showTimes))
       } catch {
-        case e: IllegalArgumentException => Left(e.getMessage)
+        case e: (IllegalArgumentException | DateTimeParseException) =>
+          Left(e.getMessage)
       }
   }
 }

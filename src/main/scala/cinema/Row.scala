@@ -153,10 +153,15 @@ case class Row private (
     ) -- bookedSeats -- bookingInProgressSeats
 
   def holdSeatsForBooking(seatBlocks: SeatBlocks): Row = {
-    require(
-      !isOverlapping(bookedSeats ++ bookingInProgressSeats ++ seatBlocks),
-      s"Seats to be reserved ($seatBlocks) cannot include seats that are already booked ($bookedSeats) or reserved ($bookingInProgressSeats)."
-    )
+    try {
+      bookedSeats ++ bookingInProgressSeats ++ seatBlocks
+    } catch {
+      case e: IllegalArgumentException =>
+        throw new IllegalArgumentException(
+          s"Cannot hold seats for booking. Seats to be reserved ($seatBlocks) cannot include seats that are already booked ($bookedSeats) or reserved ($bookingInProgressSeats)."
+        )
+    }
+
     this.copy(bookingInProgressSeats = bookingInProgressSeats ++ seatBlocks)
   }
 

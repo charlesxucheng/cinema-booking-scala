@@ -20,6 +20,43 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
     .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
 
   "BookTickets user interaction" when {
+    "entered before Movie info is set" should {
+
+      val testData = Table(
+        "Starting State",
+        AppState.empty,
+        AppState.empty.setCinemaHall(
+          CinemaHall(RectangularSeatingMap(10, 10))
+        ),
+        AppState.empty.setMovie(
+          Movie(
+            "Avengers",
+            MovieDuration(120.minutes),
+            LocalTime.of(10, 0)
+          )
+        )
+      )
+
+      "return to main menu with app state unchanged no matter the input" in {
+        forAll(testData) { initialState =>
+          val (newState, result) = SelectShowTimeAndNumberOfSeats
+            .handleInput("%%")
+            .run(initialState)
+            .value
+          newState shouldBe initialState
+          result.interaction.value shouldBe MainMenu
+        }
+      }
+
+      "display error message" in {
+        forAll(testData) { initialState =>
+          SelectShowTimeAndNumberOfSeats.getPrompt(initialState) should include(
+            "No movie show times or seating map has been defined. Please set movie show times and seating map first."
+          )
+        }
+      }
+    }
+
     "only return key is pressed" should {
       "return to main menu with app state unchanged" in {
         val initialState = AppState.empty
@@ -27,7 +64,7 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
             Movie("Avengers", MovieDuration(120.minutes), LocalTime.of(10, 0))
           )
           .setCinemaHall(CinemaHall(RectangularSeatingMap(10, 10)))
-        
+
         val (newState, result) = SelectShowTimeAndNumberOfSeats
           .handleInput("")
           .run(initialState)
@@ -86,7 +123,8 @@ class SelectShowTimeAndNumberOfSeatsTest extends UnitSpec {
         "dfsa#%",
         "-1 2",
         "30 4",
-        "0,8"
+        "0,8",
+        "a b"
       )
 
       val initialState = testState

@@ -1,7 +1,7 @@
 package cinema.ui.interactions
 
 import cinema.ui.AppState
-import cinema.ui.interactions.{DefineSeatingMap, MainMenu, SetMovieAndShowTimes}
+import cinema.ui.interactions.{DefineSeatingMap, MainMenu}
 import cinema.{RectangularSeatingMap, UnitSpec}
 import org.scalatest.matchers.should.Matchers.*
 
@@ -10,7 +10,7 @@ class DefineSeatingMapTest extends UnitSpec {
     "only return key is pressed" should {
       "return to main menu with app state unchanged" in {
         val initialState = AppState.empty
-        val (newState, result) = SetMovieAndShowTimes
+        val (newState, result) = DefineSeatingMap
           .handleInput("")
           .run(initialState)
           .value

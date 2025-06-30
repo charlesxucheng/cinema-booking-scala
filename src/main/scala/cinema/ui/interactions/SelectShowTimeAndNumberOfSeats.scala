@@ -77,7 +77,7 @@ case object SelectShowTimeAndNumberOfSeats extends UserInteraction[AppState] {
       try {
         Right((splitInput(0).toInt, splitInput(1).toInt))
       } catch {
-        case e: IllegalArgumentException => Left(e.getMessage)
+        case e: NumberFormatException => Left(e.getMessage)
       }
   }
 

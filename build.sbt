@@ -8,7 +8,8 @@ lazy val root = (project in file("."))
   )
 
 scalacOptions += "-feature"
-coverageEnabled := true
+
+addCommandAlias("testWithCov", "; coverage; clean; test; coverageReport")
 
 libraryDependencies ++= Seq("org.scalactic" %% "scalactic" % "3.2.19",
   "org.scalatest" %% "scalatest" % "3.2.19" % "test",

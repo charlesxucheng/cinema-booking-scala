@@ -85,7 +85,8 @@ class SetMovieAndShowTimesTest extends UnitSpec {
         "TestMovie 120 25:00", // Invalid show time
         "TestMovie 120 12:60", // Invalid show time
         "TestMovie 120 12:30 13:00 25:00",
-        "Test Movie 155 12:30 13:00 18:00"
+        "Test Movie 155 12:30 13:00 18:00",
+        "TestMovie 120 ab:cd 13:00 18:00"
       )
 
       "return an error message and repeat the same interaction" in {
